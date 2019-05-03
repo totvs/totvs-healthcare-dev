@@ -5,6 +5,7 @@ import { MapFile, MapMethod } from './models';
 import { getConfig, genericWorkspaceFolder } from './configFile';
 import { changePath, mkdir } from './utils';
 import { isString } from 'util';
+import { outputChannel } from './notification';
 
 export class HealthcareTastExtension {
 
@@ -34,7 +35,7 @@ export class HealthcareTastExtension {
                 let list = methods.map(item => { return item.name }).sort(function (a, b) { return a.localeCompare(b) });
                 // Mostra escolha do método para monitorar
                 vscode.window.showQuickPick(list, { placeHolder: 'Escolha a função para interceptar dados' }).then(item => {
-                    if (item) {
+                    if ((item != null) && (item != '')) {
                         let method = methods.find(v => v.name == item);
                         let data = this.createBridgeProgram(method);
                         let wf = vscode.workspace.getWorkspaceFolder(vscode.window.activeTextEditor.document.uri);
@@ -82,7 +83,7 @@ export class HealthcareTastExtension {
                     let strJson = fs.readFileSync(jsonName).toString();
                     let dataJson = JSON.parse(strJson);
 
-                    let templatePath = [vscode.extensions.getExtension(this.THIS_EXTENSION).extensionPath, 'src', 'template', 'tast'].join('\\');
+                    let templatePath = [vscode.extensions.getExtension(this.THIS_EXTENSION).extensionPath, 'resources', 'template', 'tast'].join('\\');
                     let dataCenario = fs.readFileSync([templatePath, 'test-case.p'].join('\\')).toString();
 
                     vscode.window.showInputBox({ prompt: 'Nome do arquivo do caso de teste (sem a extensão)', value: 'CT_.p' }).then(testName => {
@@ -100,7 +101,7 @@ export class HealthcareTastExtension {
     }
 
     private createBridgeProgram(method: MapMethod): string {
-        let templatePath = [vscode.extensions.getExtension(this.THIS_EXTENSION).extensionPath, 'src', 'template', 'tast'].join('\\');
+        let templatePath = [vscode.extensions.getExtension(this.THIS_EXTENSION).extensionPath, 'resources', 'template', 'tast'].join('\\');
         let dataBefore = fs.readFileSync([templatePath, 'bo-injection-before.p'].join('\\')).toString();
         let dataAfter = fs.readFileSync([templatePath, 'bo-injection-after.p'].join('\\')).toString();
         let dataActive = vscode.window.activeTextEditor.document.getText();
