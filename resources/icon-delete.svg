@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" 
+    xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 224 224" width="16px" height="16px">
+    <g fill="none" fill-rule="nonzero" stroke="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" font-family="none" font-weight="none" font-size="none" text-anchor="none" style="mix-blend-mode: normal">
+        <g>
+            <g id="surface1">
+                <path d="M51.33333,60.66667v116.66667c0,10.31771 8.34896,18.66667 18.66667,18.66667h74.66667c10.31771,0 18.66667,-8.34896 18.66667,-18.66667v-116.66667z" fill="#f80101"/>
+                <path d="M102.66667,70h9.33333v107.33333h-9.33333z" fill="#bd0202"/>
+                <path d="M130.66667,70h9.33333v107.33333h-9.33333z" fill="#bd0202"/>
+                <path d="M74.66667,70h9.33333v107.33333h-9.33333z" fill="#bd0202"/>
+                <path d="M51.33333,46.66667h112v18.66667h-112z" fill="#6c0303"/>
+                <path d="M42,60.66667h130.66667v18.66667h-130.66667z" fill="#6c0303"/>
+                <path d="M88.66667,56v-18.66667h37.33333v18.66667h9.33333v-18.66667c0,-5.15886 -4.17448,-9.33333 -9.33333,-9.33333h-37.33333c-5.15886,0 -9.33333,4.17448 -9.33333,9.33333v18.66667z" fill="#6c0303"/>
+            </g>
+        </g>
+    </g>
+</svg>

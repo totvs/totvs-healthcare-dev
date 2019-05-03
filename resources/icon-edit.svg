@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" 
+    xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 224 224" width="16px" height="16px">
+    <g fill="none" fill-rule="nonzero" stroke="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" font-family="none" font-weight="none" font-size="none" text-anchor="none" style="mix-blend-mode: normal">
+        <g>
+            <g id="surface1">
+                <path d="M198.71614,42.30989l-17.02604,-17.02604c-2.58854,-2.60677 -6.81771,-2.60677 -9.40625,0l-8.02083,8.02083l26.43229,26.43229l8.02083,-8.02083c2.60677,-2.58854 2.60677,-6.79948 0,-9.40625" fill="#e57373"/>
+                <path d="M177.47917,72.95313l-118.81771,118.81771l-26.43229,-26.43229l118.81771,-118.81771z" fill="#ff9800"/>
+                <path d="M151.02864,46.52083l13.21615,-13.21614l26.45052,26.43229l-13.21614,13.21615z" fill="#b0bec5"/>
+                <path d="M32.22917,165.33854l-8.89583,35.32812l35.32813,-8.89583z" fill="#ffc107"/>
+                <path d="M27.83594,182.80208l-4.50261,17.86458l17.86458,-4.50261z" fill="#37474f"/>
+            </g>
+        </g>
+    </g>
+</svg>

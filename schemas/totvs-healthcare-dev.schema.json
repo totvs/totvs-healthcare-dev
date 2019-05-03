@@ -1,0 +1,60 @@
+{
+  "definitions": {},
+  "id": "totvs-healthcare-dev.json",
+  "properties": {
+    "tast": {
+      "id": "/properties/tast",
+      "description": "Configurações da geração de casos de teste",
+      "type":"object",
+      "properties": {
+        "bridge": {
+          "id": "/properties/tast/bridge",
+          "description": "Configurações do bridge de interceptação de dados",
+          "type": "object",
+          "properties": {
+            "path": {
+              "id": "/properties/tast/bridge/path",
+              "description": "Diretório do propath do TAST para copiar o .R de interceptação de dados",
+              "type": "string"
+            },
+            "output": {
+              "id": "/properties/tast/bridge/output",
+              "description": "Diretório onde serão gravados os arquivos interceptados (da  perspectiva do AppServer)",
+              "type": "string"
+            }
+          }
+        },
+        "cenario": {
+          "id": "/properties/tast/cenario",
+          "description": "Configurações dos cenários de teste",
+          "type": "object",
+          "properties": {
+            "input": {
+              "id": "/properties/tast/cenario/input",
+              "description": "Diretório onde estão os arquivos de interceptação gerados",
+              "type": "string"
+            },
+            "output": {
+              "id": "/properties/tast/cenario/output",
+              "description": "Diretório onde serão gerados os fontes com o caso de teste",
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "crud": {
+      "id": "/properties/crud",
+      "description": "Configurações do Gerador de CRUD",
+      "type": "object",
+      "properties": {
+        "projectPath": {
+          "id": "/properties/crud/properties/projectPath",
+          "description": "Diretório dos arquivos de projeto",
+          "type":"string"
+        }
+      }
+    }
+  },
+  "type": "object"
+}
