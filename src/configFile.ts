@@ -5,7 +5,7 @@ import * as promisify from 'util.promisify';
 
 let configFile: TotvsHealthcareConfig = null;
 let watcher: vscode.FileSystemWatcher = null;
-export var genericWorkspaceFolder: vscode.WorkspaceFolder = null;
+//export var genericWorkspaceFolder: vscode.WorkspaceFolder = null;
 
 const readFileAsync = promisify(readFile);
 const CONFIG_FILENAME = '.totvs-healthcare-dev.json';
@@ -37,7 +37,7 @@ export interface TotvsHealthcareConfig {
 function findConfigFile() {
     return vscode.workspace.findFiles(CONFIG_FILENAME).then(uris => {
         if (uris.length > 0) {
-            genericWorkspaceFolder = vscode.workspace.getWorkspaceFolder(uris[0]);
+            //genericWorkspaceFolder = vscode.workspace.getWorkspaceFolder(uris[0]);
             return uris[0].fsPath;
         }
         return null;

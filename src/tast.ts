@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { MapFile, MapMethod } from './models';
-import { getConfig, genericWorkspaceFolder } from './configFile';
+import { getConfig } from './configFile';
 import { changePath, mkdir } from './utils';
 import { isString } from 'util';
 import { outputChannel } from './notification';
@@ -45,7 +45,7 @@ export class HealthcareTastExtension {
 
                         vscode.commands.executeCommand('abl.compile', tempDest).then(() => {
                             if (fs.existsSync(rcodeName)) {
-                                let dest = changePath(vscode.window.activeTextEditor.document.uri.fsPath, config.tast.bridge.path, genericWorkspaceFolder);
+                                let dest = changePath(vscode.window.activeTextEditor.document.uri.fsPath, config.tast.bridge.path, wf);
                                 dest = dest.substring(0, dest.lastIndexOf('.')) + '.r';
                                 mkdir(path.dirname(dest));
                                 fs.copyFileSync(rcodeName, dest);
