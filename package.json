@@ -2,10 +2,11 @@
     "name": "totvs-healthcare-dev",
     "displayName": "TOTVS Healthcare Dev",
     "description": "TOTVS Healthcare Development Utilities for VS Code",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "publisher": "totvs-healthcare",
     "author": "TOTVS Healthcare",
     "license": "Apache-2.0",
+    "icon": "resources/totvs_128x128.png",
     "engines": {
         "vscode": "^1.29.0"
     },

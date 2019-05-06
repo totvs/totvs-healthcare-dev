@@ -86,7 +86,7 @@ export class HealthcareTastExtension {
                     let templatePath = [vscode.extensions.getExtension(this.THIS_EXTENSION).extensionPath, 'resources', 'template', 'tast'].join('\\');
                     let dataCenario = fs.readFileSync([templatePath, 'test-case.p'].join('\\')).toString();
 
-                    vscode.window.showInputBox({ prompt: 'Nome do arquivo do caso de teste (sem a extensão)', value: 'CT_.p' }).then(testName => {
+                    vscode.window.showInputBox({ prompt: 'Nome do arquivo do caso de teste (sem a extensão)', value: 'CT_' }).then(testName => {
                         let newFile = this.parseAndSaveCenarioTemplate(dataCenario, dataJson, data, testName);
                         vscode.workspace.openTextDocument(newFile).then(doc => {
                             vscode.window.showTextDocument(doc);
