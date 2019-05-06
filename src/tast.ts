@@ -43,6 +43,7 @@ export class HealthcareTastExtension {
                         let rcodeName = tempDest.substring(0, tempDest.lastIndexOf('.')) + '.r';
                         fs.writeFileSync(tempDest, data);
 
+                        vscode.window.showInformationMessage('Compilando o programa...');
                         vscode.commands.executeCommand('abl.compile', tempDest).then(() => {
                             if (fs.existsSync(rcodeName)) {
                                 let dest = changePath(vscode.window.activeTextEditor.document.uri.fsPath, config.tast.bridge.path, wf);
