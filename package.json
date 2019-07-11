@@ -2,7 +2,7 @@
     "name": "totvs-healthcare-dev",
     "displayName": "TOTVS Healthcare Dev",
     "description": "TOTVS Healthcare Development Utilities for VS Code",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "publisher": "totvs-healthcare",
     "author": "TOTVS Healthcare",
     "license": "Apache-2.0",
@@ -10,7 +10,10 @@
     "engines": {
         "vscode": "^1.29.0"
     },
-    "repository": {},
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/totvs/totvs-healthcare-dev.git"
+    },
     "activationEvents": [
         "onLanguage:abl"
     ],
@@ -33,6 +36,12 @@
                 "fileMatch": ".totvs-healthcare-dev.json",
                 "url": "./schemas/totvs-healthcare-dev.schema.json"
             }
+        ],
+        "snippets": [
+            {
+                "language": "abl",
+                "path": "./snippets/progress.json"
+            }
         ]
     },
     "scripts": {
@@ -44,19 +53,15 @@
         "build": "vsce package"
     },
     "dependencies": {
-        "glob": "^7.1.2",
         "jsonminify": "^0.4.1",
-        "minimatch": "^3.0.4",
-        "rimraf": "^2.6.2",
-        "util.promisify": "^1.0.0",
-        "xml2js": "^0.4.19"
+        "util.promisify": "^1.0.0"
     },
     "devDependencies": {
         "@types/mocha": "^2.2.42",
         "@types/node": "^8.10.25",
         "tslint": "^5.8.0",
         "typescript": "^3.1.4",
-        "vsce": "^1.59.0",
+        "vsce": "^1.65.0",
         "vscode": "^1.1.25"
     }
 }

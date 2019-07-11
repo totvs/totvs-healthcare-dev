@@ -5,10 +5,16 @@ import * as promisify from 'util.promisify';
 
 let configFile: TotvsHealthcareConfig = null;
 let watcher: vscode.FileSystemWatcher = null;
-//export var genericWorkspaceFolder: vscode.WorkspaceFolder = null;
 
 const readFileAsync = promisify(readFile);
 const CONFIG_FILENAME = '.totvs-healthcare-dev.json';
+
+export interface OpenEdgeConfig {
+    proPath?: string[];
+    proPathMode?: 'append' | 'overwrite' | 'prepend';
+    parameterFiles?: string[];
+    configFile?: string;
+}
 
 export interface CrudConfig {
     projectPath?: string;
@@ -27,6 +33,7 @@ export interface TastCenarioConfig {
 export interface TastConfig {
     bridge: TastBridgeConfig;
     cenario: TastCenarioConfig;
+    config?: OpenEdgeConfig;
 }
 
 export interface TotvsHealthcareConfig {
@@ -37,7 +44,6 @@ export interface TotvsHealthcareConfig {
 function findConfigFile() {
     return vscode.workspace.findFiles(CONFIG_FILENAME).then(uris => {
         if (uris.length > 0) {
-            //genericWorkspaceFolder = vscode.workspace.getWorkspaceFolder(uris[0]);
             return uris[0].fsPath;
         }
         return null;
@@ -56,7 +62,6 @@ function loadConfigFile(filename: string): Thenable<TotvsHealthcareConfig> {
     if (!filename)
         return Promise.resolve({});
     return readFileAsync(filename, { encoding: 'utf8' }).then(text => {
-        // We don't catch the parsing error, to send the error in the UI (via promise rejection)
         return JSON.parse(jsonminify(text));
     });
 }
