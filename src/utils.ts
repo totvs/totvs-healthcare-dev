@@ -1,10 +1,6 @@
 import * as fs from 'fs';
 import { WorkspaceFolder } from 'vscode';
 
-/*export function isString(value): boolean {
-	return typeof value === 'string' || value instanceof String;
-}*/
-
 export function changePath(fileName: string, destination: string, wsFolder: WorkspaceFolder): string {
 	return fileName.replace(wsFolder.uri.fsPath, destination);
 }

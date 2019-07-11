@@ -40,6 +40,44 @@
               "type": "string"
             }
           }
+        },
+        "config": {
+          "id": "/properties/tast/config",
+          "description": "Configurações adicionais para o plugin de compilação (para substituir as configurações padrão)",
+          "type": "object",
+          "properties": {
+            "parameterFiles": {
+              "id": "/properties/tast/config/parameterFiles",
+              "description": "Path to .pf files",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "configFile": {
+              "id": "/properties/tast/config/configFile",
+              "description": "Path do .ini file",
+              "type": "string"
+            },
+            "proPath": {
+              "id": "/properties/tast/config/proPath",
+              "description": "Path to include in the PROPATH variable",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "proPathMode": {
+              "id": "/properties/tast/config/proPathMode",
+              "description": "Specify how the PROPATH is modified",
+              "type": "string",
+              "enum": [
+                "append",
+                "prepend",
+                "overwrite"
+              ]
+            }
+          }
         }
       }
     },

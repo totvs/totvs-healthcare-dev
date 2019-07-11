@@ -2,7 +2,7 @@
     "name": "totvs-healthcare-dev",
     "displayName": "TOTVS Healthcare Dev",
     "description": "TOTVS Healthcare Development Utilities for VS Code",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "publisher": "totvs-healthcare",
     "author": "TOTVS Healthcare",
     "license": "Apache-2.0",
@@ -10,7 +10,10 @@
     "engines": {
         "vscode": "^1.29.0"
     },
-    "repository": {},
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/totvs/totvs-healthcare-dev.git"
+    },
     "activationEvents": [
         "onLanguage:abl"
     ],
@@ -32,6 +35,12 @@
             {
                 "fileMatch": ".totvs-healthcare-dev.json",
                 "url": "./schemas/totvs-healthcare-dev.schema.json"
+            }
+        ],
+        "snippets": [
+            {
+                "language": "abl",
+                "path": "./snippets/progress.json"
             }
         ]
     },
