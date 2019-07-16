@@ -92,6 +92,34 @@
           "type":"string"
         }
       }
+    },
+    "code": {
+      "id": "/properties/code",
+      "description": "Configurações de codificação",
+      "type": "object",
+      "properties": {
+        "alerts": {
+          "id": "/properties/code/alerts",
+          "description": "Configuração de alertas que serão emitidos ao salvar um arquivo",
+          "type": "object",
+          "properties": {
+            "keywords": {
+              "id": "/properties/code/alerts/keywords",
+              "description": "Palavras que serão alertadas caso sejam encontradas no fonte",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "notify": {
+              "id": "/properties/code/alerts/notify",
+              "description": "Exibe uma notificação quando encontrar alguma das palavras",
+              "type": "boolean",
+              "default": false
+            }
+          }
+        }
+      }
     }
   },
   "type": "object"

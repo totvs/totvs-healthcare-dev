@@ -1,9 +1,7 @@
 import * as vscode from 'vscode';
-import { outputChannel } from './notification';
-import { HealthcareCrudExtension } from './crud';
-import { MapFile } from './models';
 import { HealthcareTastExtension } from './tast';
 import { loadExtensionConfig } from './configFile';
+import { HealthcareCodeExtension } from './code';
 
 export function activate(context: vscode.ExtensionContext): void {
 
@@ -23,6 +21,9 @@ export function activate(context: vscode.ExtensionContext): void {
 
 	// Extensão do Gerador de TAST
 	new HealthcareTastExtension(context);
+
+	// Extensão de Analise de Codigo
+	new HealthcareCodeExtension(context);
 
 }
 

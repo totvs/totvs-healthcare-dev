@@ -36,9 +36,19 @@ export interface TastConfig {
     config?: OpenEdgeConfig;
 }
 
+export interface CodeAlertConfig {
+    keywords?: string[];
+    notify?: boolean;
+}
+
+export interface CodeConfig {
+    alerts?: CodeAlertConfig;
+}
+
 export interface TotvsHealthcareConfig {
     crud?: CrudConfig;
     tast?: TastConfig;
+    code?: CodeConfig;
 }
 
 function findConfigFile() {

@@ -1,3 +1,5 @@
+import * as vscode from "vscode";
+
 /**
  * Classes de mapeamento do fonte (espelhamento do plugin openedge-zext)
  */
@@ -64,6 +66,16 @@ export class MapTable {
     detail: string;
     fields: MapField[];
     indexes: MapIndex[];
+}
+
+/**
+ * Classes para tratamento de código fonte
+ */
+export interface SourceCode {
+    document: vscode.TextDocument;
+    fullSource?: string;
+    sourceWithoutComments?: string;
+    sourceWithoutStrings?: string;
 }
 
 
