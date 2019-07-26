@@ -4,7 +4,7 @@ import * as path from 'path';
 import { MapFile, MapMethod } from './models';
 import { getConfig } from './configFile';
 import { changePath, mkdir } from './utils';
-import { isString } from 'util';
+import { isString, isNullOrUndefined } from 'util';
 import { outputChannel } from './notification';
 
 export class HealthcareTastExtension {
@@ -12,6 +12,7 @@ export class HealthcareTastExtension {
     private context: vscode.ExtensionContext;
     private readonly PREFIX_FIELDCOLLECTION = 'oFd';
     private readonly EXT_OPENEDGE = 'ezequielgandolfi.openedge-zext';
+    private readonly EXT_OPENEDGE_2 = 'rafaelcanal.gps-abl';
     private readonly EXT_GETMAP = 'abl.currentFile.getMap';
     private readonly THIS_EXTENSION = 'totvs-healthcare.totvs-healthcare-dev'
 
@@ -28,7 +29,8 @@ export class HealthcareTastExtension {
     private execGenerateBridge() {
         let config = getConfig();
 
-        if (vscode.extensions.all.find(item => item.id == this.EXT_OPENEDGE)) {
+        if (vscode.extensions.all.find(item => item.id == this.EXT_OPENEDGE)
+        ||  vscode.extensions.all.find(item => item.id == this.EXT_OPENEDGE_2)) {
             // Busca todos os métodos do arquivo atual
             vscode.commands.executeCommand(this.EXT_GETMAP).then((data: MapFile) => {
                 let methods = data.methods;
@@ -64,14 +66,18 @@ export class HealthcareTastExtension {
             });
         }
         else {
-            vscode.window.showErrorMessage('Necessário instalar a extensão "' + this.EXT_OPENEDGE + '" !!!');
+            vscode.window.showErrorMessage('Necessário instalar a extensão ' 
+                + '"' + this.EXT_OPENEDGE   + '"' + ' ou '
+                + '"' + this.EXT_OPENEDGE_2 + '"'
+                + ' !!!');
         }
     }
 
     private execGenerateCenario() {
         let config = getConfig();
 
-        if (vscode.extensions.all.find(item => item.id == this.EXT_OPENEDGE)) {
+        if (vscode.extensions.all.find(item => item.id == this.EXT_OPENEDGE)
+        ||  vscode.extensions.all.find(item => item.id == this.EXT_OPENEDGE_2)) {
             // Busca todos os métodos do arquivo atual
             vscode.commands.executeCommand(this.EXT_GETMAP).then((data: MapFile) => {
 
@@ -97,7 +103,10 @@ export class HealthcareTastExtension {
             });
         }
         else {
-            vscode.window.showErrorMessage('Necessário instalar a extensão "' + this.EXT_OPENEDGE + '" !!!');
+            vscode.window.showErrorMessage('Necessário instalar a extensão ' 
+                + '"' + this.EXT_OPENEDGE   + '"' + ' ou '
+                + '"' + this.EXT_OPENEDGE_2 + '"'
+                + ' !!!');
         }
     }
 
@@ -275,7 +284,7 @@ export class HealthcareTastExtension {
 
         tempTables.forEach(ttName => {
             let tt = mapFile.tempTables.find(item => item.label.toLowerCase() == ttName);
-            if (!tt) {
+            if(!isNullOrUndefined(tt)){
                 let include = mapFile.includes.find(incFile => {
                     let incTt;
                     if (incFile.map)
