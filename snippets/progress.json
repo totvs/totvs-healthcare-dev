@@ -4,7 +4,8 @@
         "description": "RUN da BO através da hdrunpersis",
         "body":[
             "{hdp/hdrunpersis.i \"${2}/$1.p\" \"h-${1}-aux\"}",
-            "run ${3} in h-$1-aux(${4},",
+            "run ${3} in h-$1-aux(",
+            "\t${4},",
             "\tinput-output table rowErrors) no-error.\n",
             "if error-status:error",
             "then run insertErrorProgress(input \"\", input \"\", input-output table rowErrors)."

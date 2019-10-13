@@ -4,42 +4,43 @@ import * as vscode from "vscode";
  * Classes de mapeamento do fonte (espelhamento do plugin openedge-zext)
  */
 
-export class MapParams {
+export interface MapParams {
     name: string;
     asLike: 'as' | 'like';
     dataType: string;
     line: number;
     direction: 'input' | 'output' | 'input-output';
+    additional?:string;
 }
 
-export class MapMethod {
+export interface MapMethod {
     name: string;
     lineAt: number;
     lineEnd: number;
     params: MapParams[];
 }
 
-export class MapVariable {
+export interface MapVariable {
     name: string;
     asLike: 'as' | 'like';
     dataType: string;
     line: number;
 }
 
-export class MapTempTable {
+export interface MapTempTable {
     label: string;
     fields: MapVariable[];
     referenceTable: string;
     referenceFields: MapVariable[];
 }
 
-export class MapInclude {
+export interface MapInclude {
     fsPath: string;
     name: string;
     map: MapFile;
 }
 
-export class MapFile {
+export interface MapFile {
     methods: MapMethod[];
     variables: MapVariable[];
     tempTables: MapTempTable[];
@@ -47,7 +48,7 @@ export class MapFile {
     //external: MapExternal[];
 }
 
-export class MapField {
+export interface MapField {
     label: string;
     detail: string;
     dataType: string;
@@ -55,13 +56,13 @@ export class MapField {
     mandatory: boolean;
 }
 
-export class MapIndex {
+export interface MapIndex {
     label: string;
     primary: boolean;
     fields: MapField[];
 }
 
-export class MapTable {
+export interface MapTable {
     label: string;
     detail: string;
     fields: MapField[];

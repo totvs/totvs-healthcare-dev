@@ -17,6 +17,7 @@ export class HealthcareCodeExtension {
 
     private registerCommands() {
         vscode.workspace.onDidSaveTextDocument(document => { this.checkCodeAlerts(document) });
+        vscode.workspace.onDidCloseTextDocument(document => { this.emptyCodeAlerts(document) });
     }
 
     private initCodeDiagnostic() {
@@ -24,8 +25,12 @@ export class HealthcareCodeExtension {
 	    this.context.subscriptions.push(this.codeDiagnostic);
     }
 
-    private checkCodeAlerts(document: vscode.TextDocument) {
+    private emptyCodeAlerts(document: vscode.TextDocument) {
         this.codeDiagnostic.delete(document.uri);
+    }
+
+    private checkCodeAlerts(document: vscode.TextDocument) {
+        this.emptyCodeAlerts(document);
 
         let words = this.getKeywords();
         if (words.length == 0)
