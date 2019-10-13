@@ -31,6 +31,18 @@
                 "description": "Gerar cenário de teste a partir dos dados interceptados"
             }
         ],
+        "menus": {
+            "commandPalette": [
+                {
+                    "command": "healthcare.tast.generateBridge",
+                    "when": "editorLangId == 'abl'"
+                },
+                {
+                    "command": "healthcare.tast.generateCenario",
+                    "when": "editorLangId == 'abl'"
+                }
+            ]
+        },
         "jsonValidation": [
             {
                 "fileMatch": ".totvs-healthcare-dev.json",

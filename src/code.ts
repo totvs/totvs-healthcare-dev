@@ -27,18 +27,18 @@ export class HealthcareCodeExtension {
     private checkCodeAlerts(document: vscode.TextDocument) {
         this.codeDiagnostic.delete(document.uri);
 
-        if (document.languageId !== 'abl')
-            return;
-
         let words = this.getKeywords();
         if (words.length == 0)
             return;
 
         vscode.commands.getCommands(true)
             .then(list => {
-                if (!isNullOrUndefined(list.filter(item => item == this.EXT_GETSOURCE))) {
+                // tratamento especial para codigos progress
+                if ((document.languageId == 'abl')&&(!isNullOrUndefined(list.filter(item => item == this.EXT_GETSOURCE)))) {
                     vscode.commands.executeCommand(this.EXT_GETSOURCE)
-                        .then((data: SourceCode) => { this.searchCodeAlerts(document, (data.sourceWithoutComments || ''), words)  });
+                        .then((data: SourceCode) => { 
+                            this.searchCodeAlerts(document, (data.sourceWithoutComments || ''), words)  
+                        });
                 }
                 else {
                     this.searchCodeAlerts(document, document.getText(), words);
