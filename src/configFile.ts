@@ -41,8 +41,13 @@ export interface CodeAlertConfig {
     notify?: boolean;
 }
 
+export interface CodeFileAlertConfig extends CodeAlertConfig {
+    fileName?: string;
+}
+
 export interface CodeConfig {
     alerts?: CodeAlertConfig;
+    fileAlerts?: CodeFileAlertConfig[];
 }
 
 export interface TotvsHealthcareConfig {
@@ -59,7 +64,7 @@ function findConfigFile() {
         return null;
     });
 }
-function loadAndSetConfigFile(filename: string) {
+function loadAndSetConfigFile(filename: string): Thenable<any> {
     if (filename === null) {
         return Promise.resolve({});
     }

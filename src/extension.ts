@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { HealthcareTastExtension } from './tast';
 import { loadExtensionConfig } from './configFile';
 import { HealthcareCodeExtension } from './code';
+import { HealthcareFormattingExtension } from './formatting';
 
 export function activate(context: vscode.ExtensionContext): void {
 
@@ -24,6 +25,12 @@ export function activate(context: vscode.ExtensionContext): void {
 
 	// Extensão de Analise de Codigo
 	new HealthcareCodeExtension(context);
+
+	// Extensão de Formatação de Código
+	new HealthcareFormattingExtension(context);
+
+	// teste
+	//vscode.commands.registerCommand('healthcare.log.analyse.appServer', () => { vscode.window.showInformationMessage('TESTE') });
 
 }
 
