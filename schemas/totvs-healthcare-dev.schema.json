@@ -118,6 +118,35 @@
               "default": false
             }
           }
+        },
+        "fileAlerts": {
+          "id": "/properties/code/fileAlerts",
+          "description": "Configuração de alertas específicos para alguns arquivos",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "keywords": {
+                "id": "/properties/code/fileAlerts/keywords",
+                "description": "Palavras que serão alertadas caso sejam encontradas no fonte",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "notify": {
+                "id": "/properties/code/fileAlerts/notify",
+                "description": "Exibe uma notificação quando encontrar alguma das palavras",
+                "type": "boolean",
+                "default": false
+              },
+              "fileName": {
+                "id": "/properties/code/fileAlerts/fileName",
+                "description": "Nome do arquivo (aceita expressão regular)",
+                "type": "string"
+              } 
+            }
+          }
         }
       }
     }
