@@ -3,6 +3,7 @@ import { HealthcareTastExtension } from './tast';
 import { loadExtensionConfig } from './configFile';
 import { HealthcareCodeExtension } from './code';
 import { HealthcareFormattingExtension } from './formatting';
+import { HealthcareCleanCodeMetricsExtension } from './cleanCodeMetrics';
 
 export function activate(context: vscode.ExtensionContext): void {
 
@@ -24,7 +25,10 @@ export function activate(context: vscode.ExtensionContext): void {
 	new HealthcareTastExtension(context);
 
 	// Extensão de Analise de Codigo
-	new HealthcareCodeExtension(context);
+    new HealthcareCodeExtension(context);
+    
+    // Extensão de Metricas de Codigo
+	new HealthcareCleanCodeMetricsExtension(context);
 
 	// Extensão de Formatação de Código
 	new HealthcareFormattingExtension(context);

@@ -149,6 +149,32 @@
           }
         }
       }
+    },
+    "metrics": {
+        "id": "/properties/metrics",
+        "description": "Configurações de metricas de analise de codigo",
+        "type": "object",
+        "properties": {
+            "methods": {
+                "id": "/properties/metrics/methods",
+                "description": "Metricas de analise de metodos",
+                "type": "object",
+                "properties": {
+                    "max": {
+                        "id": "/properties/metrics/methods/max",
+                        "description": "Numero maximo de metodos que um programa pode conter",
+                        "type": "integer",
+                        "default": 30
+                    },
+                    "LLOC": {
+                        "id": "/properties/metrics/methods/LLOC",
+                        "description": "Numero maximo de linha logicas de codigo que um metodo pode conter",
+                        "type": "integer",
+                        "default": 50
+                    }
+                }
+            }
+        }
     }
   },
   "type": "object"

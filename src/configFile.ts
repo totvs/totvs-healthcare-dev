@@ -50,10 +50,20 @@ export interface CodeConfig {
     fileAlerts?: CodeFileAlertConfig[];
 }
 
+export interface MethodMetricsConfig {
+    max?:number;
+    LLOC?:number;
+}
+
+export interface CodeMetricsConfig {
+    methods?: MethodMetricsConfig;
+}
+
 export interface TotvsHealthcareConfig {
     crud?: CrudConfig;
     tast?: TastConfig;
     code?: CodeConfig;
+    metrics?: CodeMetricsConfig;
 }
 
 function findConfigFile() {

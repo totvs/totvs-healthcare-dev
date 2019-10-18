@@ -2,7 +2,7 @@
     "name": "totvs-healthcare-dev",
     "displayName": "TOTVS Healthcare Dev",
     "description": "TOTVS Healthcare Development Utilities for VS Code",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "publisher": "totvs-healthcare",
     "author": "TOTVS Healthcare",
     "license": "Apache-2.0",
@@ -29,6 +29,11 @@
                 "command": "healthcare.tast.generateCenario",
                 "title": "Healthcare: TAST - Gerar cenário de teste",
                 "description": "Gerar cenário de teste a partir dos dados interceptados"
+            },
+            {
+                "command": "healthcare.cleanCode.metrics.show",
+                "title": "Healthcare: CodeReview - Metricas de complexidade",
+                "description": "Analisa o código e mostra o resultado das métricas de complexidade (experimental)"
             }
         ],
         "menus": {
@@ -39,6 +44,10 @@
                 },
                 {
                     "command": "healthcare.tast.generateCenario",
+                    "when": "editorLangId == 'abl'"
+                },
+                {
+                    "command": "healthcare.cleanCode.metrics.show",
                     "when": "editorLangId == 'abl'"
                 }
             ]

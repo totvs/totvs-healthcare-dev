@@ -1,5 +1,12 @@
 # Change Log
 
+## 1.2.1
+- Análise de métricas de codificação (experimental)
+
+## 1.2.0
+- Novos alertas por padrão do nome do arquivo
+- Suporte ao auto-formatação (experimental)
+
 ## 1.1.1
 - Adicionado compatibilidade com plugin gps-abl
 

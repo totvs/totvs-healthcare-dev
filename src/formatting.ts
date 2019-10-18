@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { FormattingOptions, DocumentFormattingEditProvider, TextDocument, CancellationToken, TextEdit, Range, Position } from 'vscode';
+import { isNullOrUndefined } from 'util';
 
 enum CommentType { SingleLine, MultiLine }
 enum StringQuoteType { SingleQuote, DoubleQuote }
@@ -91,21 +92,44 @@ class HealthcareFormat {
         let newText = text;
         newText = this.blockCommand('assign',newText);
         newText = this.blockCommand('def|define',newText,1);
-        newText = this.blockCommand('find|for',newText,1);
+        newText = this.blockCommand('find|for',newText,1,null,this.specificsFind_After);
+        newText = this.blockCommand('message',newText);
 
         return newText;
+    }
+
+    // private specificsFind_Before(res: RegExpExecArray) {
+    // }
+
+    private specificsFind_After(str: string) {
+        let strSplit = str.split('\n');
+        strSplit = strSplit.map(line => {
+            let strAux = line.trimLeft().toLowerCase();
+            if (strAux.startsWith('and'))
+                line = '  ' + line;
+            else if (strAux.startsWith('or'))
+                line = '   ' + line;
+            else if (strAux.match(/^(no|shared|exclusive)\-lock/))
+                line = '      ' + line;
+            return line;
+        });
+        return strSplit.join('\n');
     }
 
     /**
      * Alinha linhas adicionais dentro de um comando
      * @param command comando
      * @param text texto a ser formatado
+     * @callback beforeExecution Recebe um RegExpExecArray com o bloco encontrado, e pode ter seus valores alterados
+     * @callback afterExecution Recebe a string formatada e devolve o texto que vai substituir a mesma
      */
-    private blockCommand(command:string,text: string,blockTabs?:number): string {
-        let regexCommand = new RegExp(`(^|[\\n\\s\\t]{1})(${command})([\\s\\n\\t]+)([\\w\\W]+?)([\\.\\:]{1}[\\s\\n]{1})`, 'gim');
+    private blockCommand(command:string,text: string,blockTabs?:number,beforeExecution?:Function,afterExecution?:Function): string {
+        let regexCommand = new RegExp(`(^|[\\n\\s\\t]+)(${command})([\\s\\n\\t]+)([\\w\\W]+?)([\\.\\:]{1}[\\s\\n]{1})`, 'gim');
 
         let res = regexCommand.exec(text);
         while(res) {
+            if (!isNullOrUndefined(beforeExecution))
+                beforeExecution(res);
             let ident: string;
             if (blockTabs > 0) {
                 ident = this.blockTabs(blockTabs);
@@ -118,15 +142,18 @@ class HealthcareFormat {
                     startLine = text.substring(startIndex+1, res.index);
                 else
                     startLine = text.substring(0, res.index);
-                startLine = startLine.trimLeft() + res[1].replace('\n', '');
+                startLine = startLine.trimLeft();
+                if (startLine.length > 0)
+                    startLine += res[1].replace('\n', '');
                 ident = ' '.repeat(startLine.length + res[2].length + 1);
             }
             // substitui dados com identacao
             let str = res[1] + res[2] + res[3] + res[4].replace(/\n/gm, `\n${ident}`) + res[5];
+            if (!isNullOrUndefined(afterExecution))
+                str = afterExecution(str);
             text = text.substring(0, res.index) + str + text.substring(regexCommand.lastIndex);
             res = regexCommand.exec(text);
         }
-
 
         return text;
     }
@@ -182,25 +209,8 @@ class HealthcareFormat {
                         inComment = false;
                         commentType = null;
                     }
-                    if (!keepSpaces) {
+                    if (!keepSpaces) 
                         line = line.trim();
-                        // if (!inString && !inComment) {
-                        //     if (/^def/i.test(line)) {
-                        //         nextLineDepth++;
-                        //     }
-                        //     if (/^where/i.test(line)) {
-                        //         thisDepth++;
-                        //     }
-                        //     else if (/^and/i.test(line)) {
-                        //         thisDepth++;
-                        //         line = '  ' + line;
-                        //     }
-                        //     else if (/^(no|shared|exclusive)\-(lock|error)/i.test(line)) {
-                        //         thisDepth++;
-                        //         line = '      ' + line;
-                        //     }
-                        // }
-                    }
                     textMap.push({depth: (keepSpaces ? 0 : thisDepth), text: line});
                     line = '';
                     if (inComment && commentType == CommentType.MultiLine)
@@ -241,9 +251,9 @@ class HealthcareFormat {
                         statement = statement.trimLeft();
                         if (/(\bend\b)/gi.test(line))
                             depth--;
-                        if (/^def/i.test(statement)) {
-                            nextLineDepth--;
-                        }
+                        // if (/^def/i.test(statement)) {
+                        //     nextLineDepth--;
+                        // }
                         statement = '';
                     }
                     break;
