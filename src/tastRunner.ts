@@ -30,7 +30,7 @@ export class HealthcareTastRunnerExtension {
     private inExecution: { RUN: boolean };
     private abortExecution: { RUN: boolean };
     private config: TastRunnerConfig;
-    private sessionCookie = [];
+    private sessionCookies: string[] = [];
 
     private readonly API_QUERY_SEARCH = 'search={CASENAME}.r';
 
@@ -94,8 +94,8 @@ export class HealthcareTastRunnerExtension {
             vscode.window.showInformationMessage('Rodando casos de teste...');
             outputChannel.show(true);
 
-            this.requestTastLogin().then(loginCookie => {
-                if (isNullOrUndefined(loginCookie)) {
+            this.requestLogin().then(ok => {
+                if (ok !== true) {
                     vscode.window.showInformationMessage('Erro ao conectar no ambiente do TAST')
                     outputChannel.appendLine('Erro ao conectar no ambiente do TAST');
                     this.inExecution.RUN = false;
@@ -117,13 +117,36 @@ export class HealthcareTastRunnerExtension {
                         return;
                     }
 
-                    this.runTestCases(loginCookie, cases);
+                    this.runTestCases(cases);
                 });
             }).catch(() => this.inExecution.RUN = false);
         }
     }
 
-    private requestTastLogin(): Promise<string> {
+    private requestLogin(): Promise<boolean> {
+        this.sessionCookies = [];
+
+        let result = false;
+        let promises = [];
+
+        let pTotvs = this.requestTotvsLogin().then(totvsCookies => {
+            if (!isNullOrUndefined(totvsCookies))
+                this.sessionCookies = [...this.sessionCookies,...totvsCookies];
+        });
+        promises.push(pTotvs);
+
+        let pJosso = pTotvs.then(() => this.requestJossoLogin().then(jossoCookies => {
+            if (!isNullOrUndefined(jossoCookies)) {
+                this.sessionCookies = [...this.sessionCookies,...jossoCookies];
+                result = true;
+            }
+        }));
+        promises.push(pJosso);
+
+        return Promise.all(promises).then(() => result);
+    }
+
+    private requestTotvsLogin(): Promise<string[]> {
         const getOptions = {
             hostname: this.config.totvs.host,
             port: this.config.totvs.port,
@@ -141,12 +164,12 @@ export class HealthcareTastRunnerExtension {
                     res.emit('error');
                 }, getOptions.timeout);
 
-                let resultData;
+                let resultData: string[];
 
                 res.on('data', () => {
                     clearTimeout(timeoutControl);
                     if (!isNullOrUndefined(res.headers['set-cookie']))
-                        resultData = res.headers['set-cookie'].join('; ');
+                        resultData = res.headers['set-cookie'];
                 })
                 .on('error', () => {
                     clearTimeout(timeoutControl);
@@ -154,11 +177,58 @@ export class HealthcareTastRunnerExtension {
                 })
                 .on('end', () => { 
                     clearTimeout(timeoutControl);
-                    resolve(resultData);
+                    if (isNullOrUndefined(resultData))
+                        resolve();
+                    else
+                        resolve(resultData)
                 });
             });
             
-            getRequest.setTimeout(2500);
+            getRequest.end();
+        });
+    }
+
+    private requestJossoLogin(): Promise<string[]> {
+        const getOptions = {
+            hostname: this.config.totvs.host,
+            port: this.config.totvs.port,
+            path: this.config.totvs.jossoPath,
+            method: 'GET',
+            timeout: 2500,
+            headers: {
+                'Cookie': this.sessionCookies.join('; ')
+            }
+        };
+        return new Promise(resolve => {
+            const getRequest = http.request(getOptions, (res) => {
+                let timeoutControl = setTimeout(() => {
+                    if (!isNullOrUndefined(res.socket)) {
+                        outputChannel.appendLine(`Timeout ao tentar login no JOSSO`);
+                        res.socket.destroy();
+                    }
+                    res.emit('error');
+                }, getOptions.timeout);
+
+                let resultData: string[];
+
+                res.on('data', () => {
+                    clearTimeout(timeoutControl);
+                    if (!isNullOrUndefined(res.headers['set-cookie']))
+                        resultData = res.headers['set-cookie'];
+                })
+                .on('error', () => {
+                    clearTimeout(timeoutControl);
+                    resolve();
+                })
+                .on('end', () => { 
+                    clearTimeout(timeoutControl);
+                    if (isNullOrUndefined(resultData))
+                        resolve();
+                    else
+                        resolve(resultData)
+                });
+            });
+            
             getRequest.end();
         });
     }
@@ -242,9 +312,9 @@ export class HealthcareTastRunnerExtension {
                     }
                     outputChannel.appendLine(`Encontrado(s) ${resultData.length} caso(s) de teste`);
                 })
-                .on('error', (error) => {
+                .on('error', () => {
                     clearTimeout(timeoutControl);
-                    //resolve();
+                    resolve();
                 })
                 .on('end', () => {
                     clearTimeout(timeoutControl);
@@ -252,13 +322,12 @@ export class HealthcareTastRunnerExtension {
                 });
             });
             
-            postRequest.setTimeout(5000);
             postRequest.write(postData);
             postRequest.end();
         });
     }
 
-    private runTestCases(loginCookie:string,cases:string[]) {
+    private runTestCases(cases:string[]) {
         let results:TestCaseQueue[] = [];
 
         cases.forEach(async item => {
@@ -282,16 +351,21 @@ export class HealthcareTastRunnerExtension {
                 else
                     vscode.window.showErrorMessage('Todos casos de teste resultaram em erro');
             }
-            else
+            else {
                 vscode.window.showInformationMessage('Todos casos de teste rodaram com sucesso!');
+                outputChannel.hide();
+            }
 
             this.inExecution.RUN = false;
+
+            if (this.config.showResults === true)
+                this.openResultDocument(results);
         }
 
-        this.runNext(loginCookie, results, fncFinish);
+        this.runNext(results, fncFinish);
     }
 
-    private runNext(loginCookie:string, results:TestCaseQueue[], onFinish?:Function) {
+    private runNext(results:TestCaseQueue[], onFinish?:Function) {
         if (this.abortExecution.RUN) {
             this.inExecution.RUN = false;
             outputChannel.appendLine('Execução abortada!');
@@ -303,7 +377,7 @@ export class HealthcareTastRunnerExtension {
         if (!isNullOrUndefined(result)) {
             if (isNullOrUndefined(result.data)) {
                 // ainda nao tem os dados do caso de teste
-                this.getTestCase(loginCookie, result.CASENAME)
+                this.getTestCase(result.CASENAME)
                     .then(getTestCaseResult => {
                         let tcData;
                         if (!isNullOrUndefined(getTestCaseResult) && !isNullOrUndefined(getTestCaseResult.items)) {
@@ -313,16 +387,16 @@ export class HealthcareTastRunnerExtension {
                             result.data = tcData;
                         else
                             result.done = true;
-                        this.runNext(loginCookie, results, onFinish);
+                        this.runNext(results, onFinish);
                     })
                     .catch(() => {
                         result.done = true;
-                        this.runNext(loginCookie, results, onFinish);
+                        this.runNext(results, onFinish);
                     });
             }
             else {
                 // ja tem os dados, entao roda o caso de teste
-                this.runTestCase(loginCookie, result)
+                this.runTestCase(result)
                     .then(runTestCaseResult => {
                         if (!isNullOrUndefined(runTestCaseResult) && !isNullOrUndefined(runTestCaseResult.items) && (runTestCaseResult.items.length == 1)) {
                             let tcResult = runTestCaseResult.items[0];
@@ -333,11 +407,11 @@ export class HealthcareTastRunnerExtension {
                         else {
                             result.done = true;
                         }
-                        this.runNext(loginCookie, results, onFinish);
+                        this.runNext(results, onFinish);
                     })
                     .catch(() => {
                         result.done = true;
-                        this.runNext(loginCookie, results, onFinish);
+                        this.runNext(results, onFinish);
                     });
             }
         }
@@ -348,7 +422,7 @@ export class HealthcareTastRunnerExtension {
         } 
     }
 
-    private getTestCase(loginCookie:string,caseName:string): Promise<any> {
+    private getTestCase(caseName:string): Promise<any> {
         const getOptions = {
             hostname: this.config.totvs.host,
             port: this.config.totvs.port,
@@ -356,9 +430,8 @@ export class HealthcareTastRunnerExtension {
             method: 'GET',
             timeout: 3500,
             headers: {
-                'Cookie': loginCookie
-            },
-            followAllRedirects: true
+                'Cookie': this.sessionCookies.join('; ')
+            }
         };
 
         return new Promise(resolve => {
@@ -371,16 +444,16 @@ export class HealthcareTastRunnerExtension {
                     res.emit('error');
                 }, getOptions.timeout);
 
-                res
-                .on('data', (dataBuffer: Buffer) => {
+                let resultData;
+
+                res.on('data', (dataBuffer: Buffer) => {
                     clearTimeout(timeoutControl);
                     if (res.statusCode == 200) {
                         outputChannel.appendLine(`${caseName} pronto para ser executado`);
-                        resolve(JSON.parse(dataBuffer.toString()));
+                        resultData = JSON.parse(dataBuffer.toString());
                     }
                     else {
                         outputChannel.appendLine(`Erro ao consultar dados de ${caseName} (status ${res.statusCode})`);
-                        resolve();
                     }
                 })
                 .on('error', () => {
@@ -389,7 +462,8 @@ export class HealthcareTastRunnerExtension {
                     resolve();
                 })
                 .on('end', () => {
-                    console.log(res.statusCode);
+                    clearTimeout(timeoutControl);
+                    resolve(resultData);
                 });
             });
             
@@ -397,7 +471,7 @@ export class HealthcareTastRunnerExtension {
         });
     }
 
-    private runTestCase(loginCookie:string,testCase:TestCaseQueue): Promise<any> {
+    private runTestCase(testCase:TestCaseQueue): Promise<any> {
         return new Promise(resolve => {
             const jsonData = {
                 tmpCaseTest: [testCase.data]
@@ -410,7 +484,7 @@ export class HealthcareTastRunnerExtension {
                 method: 'POST',
                 timeout: 10000,
                 headers: {
-                    'Cookie': loginCookie,
+                    'Cookie': this.sessionCookies.join('; '),
                     'Content-Type': 'application/json',
                     'Content-Length': postData.length
                 }
@@ -425,28 +499,36 @@ export class HealthcareTastRunnerExtension {
                     res.emit('error');
                 }, postOptions.timeout);
 
+                let resultData;
+
                 res.on('data', (dataBuffer: Buffer) => {
                     clearTimeout(timeoutControl);
                     if (res.statusCode == 200) {
                         outputChannel.appendLine(`Finalizado teste ${testCase.CASENAME}`);
-                        resolve(JSON.parse(dataBuffer.toString()));
+                        resultData = JSON.parse(dataBuffer.toString());
                     }
                     else {
                         outputChannel.appendLine(`Erro ao executar teste ${testCase.CASENAME} (status ${res.statusCode})`);
-                        resolve();
                     }
-                });
-                res.on('error', (error) => {
+                })
+                .on('error', () => {
                     clearTimeout(timeoutControl);
                     outputChannel.appendLine(`Erro ao executar teste ${testCase.CASENAME}`);
                     resolve();
+                })
+                .on('end', () => {
+                    clearTimeout(timeoutControl);
+                    resolve(resultData);
                 });
             });
             
-            postRequest.setTimeout(10000);
             postRequest.write(postData);
             postRequest.end();
         });
+    }
+
+    private openResultDocument(results: TestCaseQueue[]) {
+        vscode.workspace.openTextDocument({content: JSON.stringify(results), language: 'json'}).then(doc => vscode.window.showTextDocument(doc));
     }
 
 }

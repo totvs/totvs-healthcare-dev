@@ -42,12 +42,14 @@ export interface TastRunnerElasticSearchConfig extends HostConfig {
 
 export interface TastRunnerTotvsConfig extends HostConfig {
     loginPath?: string;
+    jossoPath?: string;
     apiPath?: string;
 }
 
 export interface TastRunnerConfig {
     elasticsearch?: TastRunnerElasticSearchConfig;
     totvs?: TastRunnerTotvsConfig;
+    showResults?: boolean;
 }
 
 export interface TastConfig {
