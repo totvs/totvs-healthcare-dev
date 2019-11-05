@@ -30,9 +30,30 @@ export interface TastCenarioConfig {
     output: string;
 }
 
+export interface HostConfig {
+    host: string;
+    port: number;
+}
+
+export interface TastRunnerElasticSearchConfig extends HostConfig {
+    searchPath?: string;
+    maxResults?: number;
+}
+
+export interface TastRunnerTotvsConfig extends HostConfig {
+    loginPath?: string;
+    apiPath?: string;
+}
+
+export interface TastRunnerConfig {
+    elasticsearch?: TastRunnerElasticSearchConfig;
+    totvs?: TastRunnerTotvsConfig;
+}
+
 export interface TastConfig {
-    bridge: TastBridgeConfig;
-    cenario: TastCenarioConfig;
+    bridge?: TastBridgeConfig;
+    cenario?: TastCenarioConfig;
+    run?: TastRunnerConfig;
     config?: OpenEdgeConfig;
 }
 

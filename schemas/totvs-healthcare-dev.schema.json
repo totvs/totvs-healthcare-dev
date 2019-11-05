@@ -5,7 +5,7 @@
     "tast": {
       "id": "/properties/tast",
       "description": "Configurações da geração de casos de teste",
-      "type":"object",
+      "type": "object",
       "properties": {
         "bridge": {
           "id": "/properties/tast/bridge",
@@ -38,6 +38,108 @@
               "id": "/properties/tast/cenario/output",
               "description": "Diretório onde serão gerados os fontes com o caso de teste",
               "type": "string"
+            }
+          }
+        },
+        "run": {
+          "id": "/properties/tast/run",
+          "description": "Configurações de execução dos cenários de teste",
+          "type": "object",
+          "properties": {
+            "elasticsearch": {
+              "id": "/properties/tast/run/elasticsearch",
+              "description": "Dados de acesso ao ElasticSearch",
+              "type": "object",
+              "properties": {
+                "host": {
+                  "id": "/properties/tast/run/elasticsearch/host",
+                  "description": "Host do ElasticSearch",
+                  "type": "string"
+                },
+                "port": {
+                  "id": "/properties/tast/run/elasticsearch/port",
+                  "description": "Porta do ElasticSearch",
+                  "type": "integer"
+                },
+                "searchPath": {
+                  "id": "/properties/tast/run/elasticsearch/searchPath",
+                  "description": "Path de pesquisa do ElasticSearch",
+                  "type": "string",
+                  "default": "/_search"
+                },
+                "maxResults": {
+                  "id": "/properties/tast/run/elasticsearch/maxResults",
+                  "description": "Maximo de resultados a pesquisar no ElasticSearch",
+                  "type": "integer",
+                  "default": 100
+                }
+              }
+            },
+            "totvs": {
+              "id": "/properties/tast/run/totvs",
+              "description": "Dados de acesso ao TOTVS",
+              "type": "object",
+              "properties": {
+                "host": {
+                  "id": "/properties/tast/run/totvs/host",
+                  "description": "Host do TOTVS",
+                  "type": "string",
+                  "default": "cxs-tast"
+                },
+                "port": {
+                  "id": "/properties/tast/run/totvs/port",
+                  "description": "Porta de conexão",
+                  "type": "integer",
+                  "default": 8380
+                },
+                "loginPath": {
+                  "id": "/properties/tast/run/totvs/loginPath",
+                  "description": "Path do login",
+                  "type": "string",
+                  "default": "/dts/datasul-rest/resources/login?username=super&password=hFG6ihTXl1PTTLM7UbpGtLAl64E%3D"
+                },
+                "apiPath": {
+                  "id": "/properties/tast/run/totvs/apiPath",
+                  "description": "Path da API",
+                  "type": "string",
+                  "default": "/dts/datasul-rest/resources/prg/htast/v1/api-tast/"
+                }
+              }
+            },
+            "config": {
+              "parameterFiles": {
+                "id": "/properties/tast/config/parameterFiles",
+                "description": "Path to .pf files",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "configFile": {
+                "id": "/properties/tast/config/configFile",
+                "description": "Path do .ini file",
+                "type": "string"
+              },
+              "proPath": {
+                "id": "/properties/tast/config/proPath",
+                "description": "Path to include in the PROPATH variable",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "proPathMode": {
+                "default": "append",
+                "description": "Specify how the PROPATH is modified",
+                "enum": [
+                  "append",
+                  "prepend",
+                  "overwrite"
+                ],
+                "id": "/properties/tast/config/proPathMode",
+                "title": "proPathMode",
+                "type": "string"
+              }
             }
           }
         },
@@ -89,7 +191,7 @@
         "projectPath": {
           "id": "/properties/crud/properties/projectPath",
           "description": "Diretório dos arquivos de projeto",
-          "type":"string"
+          "type": "string"
         }
       }
     },
@@ -144,37 +246,37 @@
                 "id": "/properties/code/fileAlerts/fileName",
                 "description": "Nome do arquivo (aceita expressão regular)",
                 "type": "string"
-              } 
+              }
             }
           }
         }
       }
     },
     "metrics": {
-        "id": "/properties/metrics",
-        "description": "Configurações de metricas de analise de codigo",
-        "type": "object",
-        "properties": {
-            "methods": {
-                "id": "/properties/metrics/methods",
-                "description": "Metricas de analise de metodos",
-                "type": "object",
-                "properties": {
-                    "max": {
-                        "id": "/properties/metrics/methods/max",
-                        "description": "Numero maximo de metodos que um programa pode conter",
-                        "type": "integer",
-                        "default": 30
-                    },
-                    "LLOC": {
-                        "id": "/properties/metrics/methods/LLOC",
-                        "description": "Numero maximo de linha logicas de codigo que um metodo pode conter",
-                        "type": "integer",
-                        "default": 50
-                    }
-                }
+      "id": "/properties/metrics",
+      "description": "Configurações de metricas de analise de codigo",
+      "type": "object",
+      "properties": {
+        "methods": {
+          "id": "/properties/metrics/methods",
+          "description": "Metricas de analise de metodos",
+          "type": "object",
+          "properties": {
+            "max": {
+              "id": "/properties/metrics/methods/max",
+              "description": "Numero maximo de metodos que um programa pode conter",
+              "type": "integer",
+              "default": 30
+            },
+            "LLOC": {
+              "id": "/properties/metrics/methods/LLOC",
+              "description": "Numero maximo de linha logicas de codigo que um metodo pode conter",
+              "type": "integer",
+              "default": 50
             }
+          }
         }
+      }
     }
   },
   "type": "object"
