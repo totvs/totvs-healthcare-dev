@@ -14,8 +14,9 @@
           "properties": {
             "path": {
               "id": "/properties/tast/bridge/path",
-              "description": "Diretório do propath do TAST para copiar o .R de interceptação de dados",
-              "type": "string"
+              "description": "Diretório do propath do TAST para copiar o .R de interceptação de dados (DEPRECIADO: usar /tast/deploymentPath no lugar)",
+              "type": "string",
+              "$comment": "Depreciado. Utilizar /properties/tast/deploymentPath para essa definição"
             },
             "output": {
               "id": "/properties/tast/bridge/output",
@@ -61,11 +62,6 @@
                   "description": "Porta do ElasticSearch",
                   "type": "integer"
                 },
-                "searchPath": {
-                  "id": "/properties/tast/run/elasticsearch/searchPath",
-                  "description": "Path de pesquisa do ElasticSearch",
-                  "type": "string"
-                },
                 "maxResults": {
                   "id": "/properties/tast/run/elasticsearch/maxResults",
                   "description": "Maximo de resultados a pesquisar no ElasticSearch",
@@ -87,29 +83,20 @@
                   "id": "/properties/tast/run/totvs/port",
                   "description": "Porta de conexão",
                   "type": "integer"
-                },
-                "loginPath": {
-                  "id": "/properties/tast/run/totvs/loginPath",
-                  "description": "Path do login",
-                  "type": "string"
-                },
-                "jossoPath": {
-                    "id": "/properties/tast/run/totvs/jossoPath",
-                    "description": "Path da pagina de login fo JOSSO",
-                    "type": "string"
-                },
-                "apiPath": {
-                  "id": "/properties/tast/run/totvs/apiPath",
-                  "description": "Path da API",
-                  "type": "string"
                 }
               }
             },
             "showResults": {
-                "id": "/properties/tast/run/showResults",
-                "description": "Abre resultados em um documento novo",
-                "type": "boolean",
-                "default": false
+              "id": "/properties/tast/run/showResults",
+              "description": "Abre resultados em um documento novo",
+              "type": "boolean",
+              "default": false
+            },
+            "compile": {
+              "id": "/properties/tast/run/compile",
+              "description": "Compila o programa antes de rodar os casos de teste",
+              "type": "boolean",
+              "default": true
             }
           }
         },
@@ -150,6 +137,11 @@
               ]
             }
           }
+        },
+        "deploymentPath": {
+          "id": "/properties/tast/deploymentPath",
+          "description": "Diretório de quarentena do TAST para copiar o fonte compilado",
+          "type": "string"
         }
       }
     },

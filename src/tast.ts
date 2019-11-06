@@ -5,14 +5,12 @@ import { MapFile, MapMethod } from './models';
 import { getConfig } from './configFile';
 import { changePath, mkdir } from './utils';
 import { isString, isNullOrUndefined } from 'util';
-import { outputChannel } from './notification';
+import { HealthcareOpenEdgeUtils } from './openEdgeUtils';
 
 export class HealthcareTastExtension {
 
     private context: vscode.ExtensionContext;
     private readonly PREFIX_FIELDCOLLECTION = 'oFd';
-    private readonly EXT_OPENEDGE = 'ezequielgandolfi.openedge-zext';
-    private readonly EXT_OPENEDGE_2 = 'rafaelcanal.gps-abl';
     private readonly EXT_GETMAP = 'abl.currentFile.getMap';
     private readonly THIS_EXTENSION = 'totvs-healthcare.totvs-healthcare-dev'
 
@@ -28,9 +26,9 @@ export class HealthcareTastExtension {
 
     private execGenerateBridge() {
         let config = getConfig();
+        let oeUtils = new HealthcareOpenEdgeUtils();
 
-        if (vscode.extensions.all.find(item => item.id == this.EXT_OPENEDGE)
-        ||  vscode.extensions.all.find(item => item.id == this.EXT_OPENEDGE_2)) {
+        if (oeUtils.hasOpenEdgeExtension(true)) {
             // Busca todos os métodos do arquivo atual
             vscode.commands.executeCommand(this.EXT_GETMAP).then((data: MapFile) => {
                 let methods = data.methods;
@@ -46,9 +44,10 @@ export class HealthcareTastExtension {
                         fs.writeFileSync(tempDest, data);
 
                         vscode.window.showInformationMessage('Compilando o programa...');
-                        vscode.commands.executeCommand('abl.compile', tempDest, config.tast.config).then(() => {
+                        let openEdgeUtils = new HealthcareOpenEdgeUtils();
+                        openEdgeUtils.compile(tempDest, config.tast.config).then(() => {
                             if (fs.existsSync(rcodeName)) {
-                                let dest = changePath(vscode.window.activeTextEditor.document.uri.fsPath, config.tast.bridge.path, wf);
+                                let dest = changePath(vscode.window.activeTextEditor.document.uri.fsPath, (config.tast.bridge.path || config.tast.deploymentPath), wf);
                                 dest = dest.substring(0, dest.lastIndexOf('.')) + '.r';
                                 mkdir(path.dirname(dest));
                                 fs.copyFileSync(rcodeName, dest);
@@ -58,26 +57,22 @@ export class HealthcareTastExtension {
                                 vscode.window.showErrorMessage('Erro na compilação');
                                 vscode.workspace.openTextDocument({content: data, language: 'abl'}).then(doc => vscode.window.showTextDocument(doc));
                             }
-                            fs.unlinkSync(tempDest);
-                            fs.unlinkSync(rcodeName);
+                            if (fs.existsSync(tempDest))
+                                fs.unlinkSync(tempDest);
+                            if (fs.existsSync(rcodeName))
+                                fs.unlinkSync(rcodeName);
                         });
                     }
                 });
             });
         }
-        else {
-            vscode.window.showErrorMessage('Necessário instalar a extensão ' 
-                + '"' + this.EXT_OPENEDGE   + '"' + ' ou '
-                + '"' + this.EXT_OPENEDGE_2 + '"'
-                + ' !!!');
-        }
     }
 
     private execGenerateCenario() {
         let config = getConfig();
+        let oeUtils = new HealthcareOpenEdgeUtils();
 
-        if (vscode.extensions.all.find(item => item.id == this.EXT_OPENEDGE)
-        ||  vscode.extensions.all.find(item => item.id == this.EXT_OPENEDGE_2)) {
+        if (oeUtils.hasOpenEdgeExtension(true)) {
             // Busca todos os métodos do arquivo atual
             vscode.commands.executeCommand(this.EXT_GETMAP).then((data: MapFile) => {
 
@@ -101,12 +96,6 @@ export class HealthcareTastExtension {
                     });
                 });
             });
-        }
-        else {
-            vscode.window.showErrorMessage('Necessário instalar a extensão ' 
-                + '"' + this.EXT_OPENEDGE   + '"' + ' ou '
-                + '"' + this.EXT_OPENEDGE_2 + '"'
-                + ' !!!');
         }
     }
 
