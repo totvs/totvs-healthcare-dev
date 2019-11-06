@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as jsonminify from 'jsonminify';
 import { readFile } from 'fs';
 import * as promisify from 'util.promisify';
+import { isNullOrUndefined } from 'util';
 
 let configFile: TotvsHealthcareConfig = null;
 let watcher: vscode.FileSystemWatcher = null;
@@ -30,10 +31,31 @@ export interface TastCenarioConfig {
     output: string;
 }
 
+export interface HostConfig {
+    host: string;
+    port: number;
+}
+
+export interface TastRunnerElasticSearchConfig extends HostConfig {
+    maxResults?: number;
+}
+
+export interface TastRunnerTotvsConfig extends HostConfig {
+}
+
+export interface TastRunnerConfig {
+    elasticsearch?: TastRunnerElasticSearchConfig;
+    totvs?: TastRunnerTotvsConfig;
+    showResults?: boolean;
+    compile?: boolean;
+}
+
 export interface TastConfig {
-    bridge: TastBridgeConfig;
-    cenario: TastCenarioConfig;
+    bridge?: TastBridgeConfig;
+    cenario?: TastCenarioConfig;
+    run?: TastRunnerConfig;
     config?: OpenEdgeConfig;
+    deploymentPath?: string;
 }
 
 export interface CodeAlertConfig {

@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { HealthcareTastExtension } from './tast';
+import { HealthcareTastRunnerExtension } from './tastRunner';
 import { loadExtensionConfig } from './configFile';
 import { HealthcareCodeExtension } from './code';
 import { HealthcareFormattingExtension } from './formatting';
@@ -22,7 +23,10 @@ export function activate(context: vscode.ExtensionContext): void {
 	*/
 
 	// Extensão do Gerador de TAST
-	new HealthcareTastExtension(context);
+    new HealthcareTastExtension(context);
+    
+    // Extensão do Executor de Casos de Teste
+	new HealthcareTastRunnerExtension(context);
 
 	// Extensão de Analise de Codigo
     new HealthcareCodeExtension(context);

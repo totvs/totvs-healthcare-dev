@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { SourceCode, MapFile } from './models';
 import { isNullOrUndefined } from 'util';
 import { CodeMetricsConfig, getConfig } from './configFile';
+import { HealthcareOpenEdgeUtils } from './openEdgeUtils';
 
 enum DEFAULT_METRICS {
     METHOD_MAX = 30,
@@ -38,8 +39,6 @@ interface MethodMetric {
 export class HealthcareCleanCodeMetricsExtension {
 
     private context: vscode.ExtensionContext;
-    private readonly EXT_OPENEDGE = 'ezequielgandolfi.openedge-zext';
-    private readonly EXT_OPENEDGE_2 = 'rafaelcanal.gps-abl';
     private readonly EXT_GETMAP = 'abl.currentFile.getMap';
     private readonly EXT_GETSOURCE = 'abl.currentFile.getSourceCode';
 
@@ -78,8 +77,9 @@ export class HealthcareCleanCodeMetricsExtension {
         if (document.languageId != 'abl')
             return;
 
-        if (vscode.extensions.all.find(item => item.id == this.EXT_OPENEDGE)
-        ||  vscode.extensions.all.find(item => item.id == this.EXT_OPENEDGE_2)) {
+        let oeUtils = new HealthcareOpenEdgeUtils();
+        
+        if (oeUtils.hasOpenEdgeExtension(true)) {
             // Busca todos os métodos do arquivo atual
             vscode.commands.executeCommand(this.EXT_GETMAP).then((mapFile: MapFile) => {
                 vscode.commands.getCommands(true).then(list => {
@@ -96,12 +96,6 @@ export class HealthcareCleanCodeMetricsExtension {
                     }
                 });
             });
-        }
-        else {
-            vscode.window.showErrorMessage('Necessário instalar a extensão ' 
-                + '"' + this.EXT_OPENEDGE   + '"' + ' ou '
-                + '"' + this.EXT_OPENEDGE_2 + '"'
-                + ' !!!');
         }
     }
 

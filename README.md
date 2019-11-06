@@ -1,8 +1,14 @@
 # TOTVS Healthcare Development Utilities
-Extensão com utilitários de desenvolvimento para VS Code, utilizados pela unidade TOTVS Caxias do Sul.
+> Extensão para processos da unidade TOTVS Caxias do Sul
 
-## TAST
+## OpenEdge ABL (Progress)
+Para as funcionalidades que tratam de fontes Progress, é necessário instalar um dos plugins abaixo:
+- [EzequielGandolfi.openedge-zext](https://marketplace.visualstudio.com/items?itemName=EzequielGandolfi.openedge-zext)
+- [rafaelcanal.gps-abl](https://marketplace.visualstudio.com/items?itemName=rafaelcanal.gps-abl)
+
+## TAST - Testes Automatizados
 - Geração de casos de teste (TAST) baseados em operações no sistema
+- Executar casos de teste associados ao código-fonte ativo
 
 ### Bridge
 - Gera o programa de interceptação de dados
@@ -12,12 +18,14 @@ Extensão com utilitários de desenvolvimento para VS Code, utilizados pela unid
 
 ## Alertas
 - Emissão de alertas de palavras específicas no código (para evitar o commit de linhas de teste)
-> Experimental
 
 ## Metricas
 - Análise de métricas do código-fonte 
 > Experimental
 
+## Formatação
+- Formatação do código-fonte nos padrões da unidade
+> Experimental
 
 ## Snippets
 

@@ -16,7 +16,7 @@ export class HealthcareCodeExtension {
     }
 
     private registerCommands() {
-        vscode.workspace.onDidOpenTextDocument(document => { this.checkCodeAlerts(document) });
+        //vscode.workspace.onDidOpenTextDocument(document => { this.checkCodeAlerts(document) });
         vscode.workspace.onDidSaveTextDocument(document => { this.checkCodeAlerts(document) });
         vscode.workspace.onDidCloseTextDocument(document => { this.emptyCodeAlerts(document) });
     }
