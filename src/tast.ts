@@ -23,12 +23,14 @@ export class HealthcareTastExtension {
 
     private registerCommands() {
         this.context.subscriptions.push(vscode.commands.registerCommand('healthcare.tast.generateBridge', () => { this.execGenerateBridge() }));
+        this.context.subscriptions.push(vscode.commands.registerCommand('healthcare.tast.generateMethodBridge', () => { this.execGenerateMethodBridge() }));
         this.context.subscriptions.push(vscode.commands.registerCommand('healthcare.tast.generateCenario', () => { this.execGenerateCenario() }));
+        this.context.subscriptions.push(vscode.commands.registerCommand('healthcare.tast.compileTast', () => { this.execGenerateBridge() }));
     }
 
     private execGenerateBridge() {
         let config = getConfig();
-
+        
         if (vscode.extensions.all.find(item => item.id == this.EXT_OPENEDGE)
         ||  vscode.extensions.all.find(item => item.id == this.EXT_OPENEDGE_2)) {
             // Busca todos os métodos do arquivo atual
@@ -46,6 +48,7 @@ export class HealthcareTastExtension {
                         fs.writeFileSync(tempDest, data);
 
                         vscode.window.showInformationMessage('Compilando o programa...');
+
                         vscode.commands.executeCommand('abl.compile', tempDest, config.tast.config).then(() => {
                             if (fs.existsSync(rcodeName)) {
                                 let dest = changePath(vscode.window.activeTextEditor.document.uri.fsPath, config.tast.bridge.path, wf);
@@ -71,6 +74,39 @@ export class HealthcareTastExtension {
                 + '"' + this.EXT_OPENEDGE_2 + '"'
                 + ' !!!');
         }
+    }
+
+    private execGenerateMethodBridge(){
+
+        let config = getConfig();
+        
+        if (vscode.extensions.all.find(item => item.id == this.EXT_OPENEDGE)
+        ||  vscode.extensions.all.find(item => item.id == this.EXT_OPENEDGE_2)) {
+            // Busca todos os métodos do arquivo atual
+            vscode.commands.executeCommand(this.EXT_GETMAP).then((data: MapFile) => {
+                let methods = data.methods;
+                let list = methods.map(item => { return item.name }).sort(function (a, b) { return a.localeCompare(b) });
+                // Mostra escolha do método para monitorar
+                vscode.window.showQuickPick(list, { placeHolder: 'Escolha a função para interceptar dados' }).then(item => {
+                    let method = methods.find(v => v.name == item);
+                    let templatePath = [vscode.extensions.getExtension(this.THIS_EXTENSION).extensionPath, 'resources', 'template', 'tast'].join('\\');
+                    let dataAfter = fs.readFileSync([templatePath, 'bo-injection-after.p'].join('\\')).toString();
+                    dataAfter = this.parseBridgeTemplate(dataAfter, method);
+                    var ncp = require("copy-paste");
+
+                    ncp.copy(dataAfter, function () {
+                    // complete...
+                    });
+                    vscode.window.showInformationMessage('Método copiado para seu clipboard!');
+                });
+            });
+        }else {
+            vscode.window.showErrorMessage('Necessário instalar a extensão ' 
+                + '"' + this.EXT_OPENEDGE   + '"' + ' ou '
+                + '"' + this.EXT_OPENEDGE_2 + '"'
+                + ' !!!');
+        }  
+
     }
 
     private execGenerateCenario() {

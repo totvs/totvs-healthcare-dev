@@ -26,6 +26,11 @@
                 "description": "Gerar programa de interceptação de dados para o TAST"
             },
             {
+                "command": "healthcare.tast.generateMethodBridge",
+                "title": "Healthcare: TAST - Gerar método interceptador",
+                "description": "Gerar método de interceptação de dados para o TAST"
+            },
+            {
                 "command": "healthcare.tast.generateCenario",
                 "title": "Healthcare: TAST - Gerar cenário de teste",
                 "description": "Gerar cenário de teste a partir dos dados interceptados"
@@ -40,6 +45,10 @@
             "commandPalette": [
                 {
                     "command": "healthcare.tast.generateBridge",
+                    "when": "editorLangId == 'abl'"
+                },
+                {
+                    "command": "healthcare.tast.generateMethodBridge",
                     "when": "editorLangId == 'abl'"
                 },
                 {
@@ -75,7 +84,8 @@
     },
     "dependencies": {
         "jsonminify": "^0.4.1",
-        "util.promisify": "^1.0.0"
+        "util.promisify": "^1.0.0",
+        "copy-paste": "1.3.0"
     },
     "devDependencies": {
         "@types/mocha": "^2.2.42",
