@@ -20,8 +20,67 @@ export class HealthcareTastExtension {
     }
 
     private registerCommands() {
-        this.context.subscriptions.push(vscode.commands.registerCommand('healthcare.tast.generateBridge', () => { this.execGenerateBridge() }));
-        this.context.subscriptions.push(vscode.commands.registerCommand('healthcare.tast.generateCenario', () => { this.execGenerateCenario() }));
+        this.context.subscriptions.push(vscode.commands.registerCommand('healthcare.tast.bridge.show', () => { this.execShowBridge() }));
+        this.context.subscriptions.push(vscode.commands.registerCommand('healthcare.tast.bridge.method.clipboard', () => { this.execClipboardBridgeMethod() }));
+        this.context.subscriptions.push(vscode.commands.registerCommand('healthcare.tast.bridge.compile', () => { this.execGenerateBridge() }));
+        this.context.subscriptions.push(vscode.commands.registerCommand('healthcare.tast.cenario.compile', () => { this.execGenerateCenario() }));
+    }
+
+    private templatePath(): string {
+        return [vscode.extensions.getExtension(this.THIS_EXTENSION).extensionPath, 'resources', 'template', 'tast'].join('\\');
+    }
+
+    private chooseMethod(): Promise<MapMethod> {
+        let oeUtils = new HealthcareOpenEdgeUtils();
+
+        if (oeUtils.hasOpenEdgeExtension(true)) {
+            let _getMap = this.EXT_GETMAP;
+            return new Promise(resolve =>  {
+                vscode.commands.executeCommand(_getMap).then((data: MapFile) => {
+                    try {
+                        let methods = data.methods;
+                        let list = methods.map(item => { return item.name }).sort(function (a, b) { return a.localeCompare(b) });
+                        vscode.window.showQuickPick(list, { placeHolder: 'Escolha a função para interceptar dados' }).then(item => {
+                            if ((item != null) && (item != ''))
+                                resolve(methods.find(v => v.name == item));
+                            else
+                                resolve();
+                        });
+                    }
+                    catch(e) {
+                        resolve();
+                    }
+                });
+            });
+            
+        }
+        return Promise.resolve(null);
+    }
+
+    private getBridgeSource(): Promise<string> {
+        return this.chooseMethod().then(method => {
+            if (isNullOrUndefined(method))
+                return null;
+            return this.createBridgeProgram(method);
+        });
+    }
+
+    private execShowBridge() {
+        this.getBridgeSource().then(data => {
+            if (!isNullOrUndefined(data))
+                vscode.workspace.openTextDocument({ content: data, language: 'abl' }).then(doc => vscode.window.showTextDocument(doc));
+        });
+    }
+
+    private execClipboardBridgeMethod() {
+        return this.chooseMethod().then(method => {
+            if (isNullOrUndefined(method))
+                return;
+            let templatePath = this.templatePath();
+            let dataAfter = fs.readFileSync([templatePath, 'bo-injection-after.p'].join('\\')).toString();
+            dataAfter = this.parseBridgeTemplate(dataAfter, method);
+            vscode.env.clipboard.writeText(dataAfter).then(() => vscode.window.showInformationMessage('Método copiado para seu clipboard!'));
+        });
     }
 
     private execGenerateBridge() {
@@ -29,42 +88,35 @@ export class HealthcareTastExtension {
         let oeUtils = new HealthcareOpenEdgeUtils();
 
         if (oeUtils.hasOpenEdgeExtension(true)) {
-            // Busca todos os métodos do arquivo atual
-            vscode.commands.executeCommand(this.EXT_GETMAP).then((data: MapFile) => {
-                let methods = data.methods;
-                let list = methods.map(item => { return item.name }).sort(function (a, b) { return a.localeCompare(b) });
-                // Mostra escolha do método para monitorar
-                vscode.window.showQuickPick(list, { placeHolder: 'Escolha a função para interceptar dados' }).then(item => {
-                    if ((item != null) && (item != '')) {
-                        let method = methods.find(v => v.name == item);
-                        let data = this.createBridgeProgram(method);
-                        let wf = vscode.workspace.getWorkspaceFolder(vscode.window.activeTextEditor.document.uri);
-                        let tempDest = [wf.uri.fsPath, '.' + path.basename(vscode.window.activeTextEditor.document.uri.fsPath)].join('\\');
-                        let rcodeName = tempDest.substring(0, tempDest.lastIndexOf('.')) + '.r';
-                        fs.writeFileSync(tempDest, data);
+            this.chooseMethod().then(method => {
+                if (isNullOrUndefined(method))
+                    return;
+                let data = this.createBridgeProgram(method);
+                let wf = vscode.workspace.getWorkspaceFolder(vscode.window.activeTextEditor.document.uri);
+                let tempDest = [wf.uri.fsPath, '.' + path.basename(vscode.window.activeTextEditor.document.uri.fsPath)].join('\\');
+                let rcodeName = tempDest.substring(0, tempDest.lastIndexOf('.')) + '.r';
+                fs.writeFileSync(tempDest, data);
 
-                        vscode.window.showInformationMessage('Compilando o programa...');
-                        let openEdgeUtils = new HealthcareOpenEdgeUtils();
-                        openEdgeUtils.compile(tempDest, config.tast.config).then(() => {
-                            if (fs.existsSync(rcodeName)) {
-                                let dest = changePath(vscode.window.activeTextEditor.document.uri.fsPath, (config.tast.bridge.path || config.tast.deploymentPath), wf);
-                                dest = dest.substring(0, dest.lastIndexOf('.')) + '.r';
-                                mkdir(path.dirname(dest));
-                                fs.copyFileSync(rcodeName, dest);
-                                vscode.window.showInformationMessage('Programa de interceptação gerado');
-                            }
-                            else {
-                                vscode.window.showErrorMessage('Erro na compilação');
-                                vscode.workspace.openTextDocument({content: data, language: 'abl'}).then(doc => vscode.window.showTextDocument(doc));
-                            }
-                            if (fs.existsSync(tempDest))
-                                fs.unlinkSync(tempDest);
-                            if (fs.existsSync(rcodeName))
-                                fs.unlinkSync(rcodeName);
-                        });
+                vscode.window.showInformationMessage('Compilando o programa...');
+                let openEdgeUtils = new HealthcareOpenEdgeUtils();
+                openEdgeUtils.compile(tempDest, config.tast.config).then(() => {
+                    if (fs.existsSync(rcodeName)) {
+                        let dest = changePath(vscode.window.activeTextEditor.document.uri.fsPath, (config.tast.bridge.path || config.tast.deploymentPath), wf);
+                        dest = dest.substring(0, dest.lastIndexOf('.')) + '.r';
+                        mkdir(path.dirname(dest));
+                        fs.copyFileSync(rcodeName, dest);
+                        vscode.window.showInformationMessage('Programa de interceptação gerado');
                     }
+                    else {
+                        vscode.window.showErrorMessage('Erro na compilação');
+                        vscode.workspace.openTextDocument({content: data, language: 'abl'}).then(doc => vscode.window.showTextDocument(doc));
+                    }
+                    if (fs.existsSync(tempDest))
+                        fs.unlinkSync(tempDest);
+                    if (fs.existsSync(rcodeName))
+                        fs.unlinkSync(rcodeName);
                 });
-            });
+            })
         }
     }
 
@@ -85,7 +137,7 @@ export class HealthcareTastExtension {
                     let strJson = fs.readFileSync(jsonName).toString();
                     let dataJson = JSON.parse(strJson);
 
-                    let templatePath = [vscode.extensions.getExtension(this.THIS_EXTENSION).extensionPath, 'resources', 'template', 'tast'].join('\\');
+                    let templatePath = this.templatePath();
                     let dataCenario = fs.readFileSync([templatePath, 'test-case.p'].join('\\')).toString();
 
                     vscode.window.showInputBox({ prompt: 'Nome do arquivo do caso de teste (sem a extensão)', value: 'CT_' }).then(testName => {
@@ -100,7 +152,7 @@ export class HealthcareTastExtension {
     }
 
     private createBridgeProgram(method: MapMethod): string {
-        let templatePath = [vscode.extensions.getExtension(this.THIS_EXTENSION).extensionPath, 'resources', 'template', 'tast'].join('\\');
+        let templatePath = this.templatePath();
         let dataBefore = fs.readFileSync([templatePath, 'bo-injection-before.p'].join('\\')).toString();
         let dataAfter = fs.readFileSync([templatePath, 'bo-injection-after.p'].join('\\')).toString();
         let dataActive = vscode.window.activeTextEditor.document.getText();

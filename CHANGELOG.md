@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.3.0
+- Executar casos de teste associados ao código-fonte ativo
+- Gerar o programa/método do bridge (TAST) sem compilar
+
 ## 1.2.1
 - Análise de métricas de codificação (experimental)
 
