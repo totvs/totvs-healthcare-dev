@@ -2,13 +2,13 @@
     "name": "totvs-healthcare-dev",
     "displayName": "TOTVS Healthcare Dev",
     "description": "TOTVS Healthcare Development Utilities for VS Code",
-    "version": "1.2.1",
+    "version": "1.3.0",
     "publisher": "totvs-healthcare",
     "author": "TOTVS Healthcare",
     "license": "Apache-2.0",
     "icon": "resources/totvs_128x128.png",
     "engines": {
-        "vscode": "^1.29.0"
+        "vscode": "^1.39.0"
     },
     "repository": {
         "type": "git",
@@ -21,14 +21,29 @@
     "contributes": {
         "commands": [
             {
-                "command": "healthcare.tast.generateBridge",
+                "command": "healthcare.tast.bridge.show",
+                "title": "Healthcare: TAST - Abrir código-fonte do bridge",
+                "description": "Gerar programa de interceptação de dados para o TAST e abrir o código em um novo arquivo"
+            },
+            {
+                "command": "healthcare.tast.bridge.method.clipboard",
+                "title": "Healthcare: TAST - Copiar método de bridge para a área de transferência",
+                "description": "Gerar método de interceptação de dados para o TAST e disponibilizar no clipboard"
+            },
+            {
+                "command": "healthcare.tast.bridge.compile",
                 "title": "Healthcare: TAST - Gerar bridge (interceptador)",
                 "description": "Gerar programa de interceptação de dados para o TAST"
             },
             {
-                "command": "healthcare.tast.generateCenario",
+                "command": "healthcare.tast.cenario.compile",
                 "title": "Healthcare: TAST - Gerar cenário de teste",
                 "description": "Gerar cenário de teste a partir dos dados interceptados"
+            },
+            {
+                "command": "healthcare.tast.run",
+                "title": "Healthcare: TAST - Rodar casos de teste",
+                "description": "Roda todos os casos de teste que passam por este arquivo (experimental)"
             },
             {
                 "command": "healthcare.cleanCode.metrics.show",
@@ -39,11 +54,23 @@
         "menus": {
             "commandPalette": [
                 {
-                    "command": "healthcare.tast.generateBridge",
+                    "command": "healthcare.tast.bridge.show",
                     "when": "editorLangId == 'abl'"
                 },
                 {
-                    "command": "healthcare.tast.generateCenario",
+                    "command": "healthcare.tast.bridge.method.clipboard",
+                    "when": "editorLangId == 'abl'"
+                },
+                {
+                    "command": "healthcare.tast.bridge.compile",
+                    "when": "editorLangId == 'abl'"
+                },
+                {
+                    "command": "healthcare.tast.cenario.compile",
+                    "when": "editorLangId == 'abl'"
+                },
+                {
+                    "command": "healthcare.tast.run",
                     "when": "editorLangId == 'abl'"
                 },
                 {
@@ -69,8 +96,6 @@
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "npm run compile && node ./node_modules/vscode/bin/test",
         "build": "vsce package"
     },
     "dependencies": {
@@ -78,11 +103,10 @@
         "util.promisify": "^1.0.0"
     },
     "devDependencies": {
-        "@types/mocha": "^2.2.42",
-        "@types/node": "^8.10.25",
+        "@types/node": "^10.14.17",
+        "@types/vscode": "1.39.0",
         "tslint": "^5.18.0",
-        "typescript": "^3.1.4",
-        "vsce": "^1.65.0",
-        "vscode": "^1.1.34"
+        "typescript": "^3.7.2",
+        "vsce": "1.69.0"
     }
 }

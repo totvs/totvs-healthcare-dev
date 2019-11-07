@@ -5,7 +5,7 @@
     "tast": {
       "id": "/properties/tast",
       "description": "Configurações da geração de casos de teste",
-      "type":"object",
+      "type": "object",
       "properties": {
         "bridge": {
           "id": "/properties/tast/bridge",
@@ -14,8 +14,9 @@
           "properties": {
             "path": {
               "id": "/properties/tast/bridge/path",
-              "description": "Diretório do propath do TAST para copiar o .R de interceptação de dados",
-              "type": "string"
+              "description": "Diretório do propath do TAST para copiar o .R de interceptação de dados (DEPRECIADO: usar /tast/deploymentPath no lugar)",
+              "type": "string",
+              "$comment": "Depreciado. Utilizar /properties/tast/deploymentPath para essa definição"
             },
             "output": {
               "id": "/properties/tast/bridge/output",
@@ -38,6 +39,64 @@
               "id": "/properties/tast/cenario/output",
               "description": "Diretório onde serão gerados os fontes com o caso de teste",
               "type": "string"
+            }
+          }
+        },
+        "run": {
+          "id": "/properties/tast/run",
+          "description": "Configurações de execução dos cenários de teste",
+          "type": "object",
+          "properties": {
+            "elasticsearch": {
+              "id": "/properties/tast/run/elasticsearch",
+              "description": "Dados de acesso ao ElasticSearch",
+              "type": "object",
+              "properties": {
+                "host": {
+                  "id": "/properties/tast/run/elasticsearch/host",
+                  "description": "Host do ElasticSearch",
+                  "type": "string"
+                },
+                "port": {
+                  "id": "/properties/tast/run/elasticsearch/port",
+                  "description": "Porta do ElasticSearch",
+                  "type": "integer"
+                },
+                "maxResults": {
+                  "id": "/properties/tast/run/elasticsearch/maxResults",
+                  "description": "Maximo de resultados a pesquisar no ElasticSearch",
+                  "type": "integer"
+                }
+              }
+            },
+            "totvs": {
+              "id": "/properties/tast/run/totvs",
+              "description": "Dados de acesso ao TOTVS",
+              "type": "object",
+              "properties": {
+                "host": {
+                  "id": "/properties/tast/run/totvs/host",
+                  "description": "Host do TOTVS",
+                  "type": "string"
+                },
+                "port": {
+                  "id": "/properties/tast/run/totvs/port",
+                  "description": "Porta de conexão",
+                  "type": "integer"
+                }
+              }
+            },
+            "showResults": {
+              "id": "/properties/tast/run/showResults",
+              "description": "Abre resultados em um documento novo",
+              "type": "boolean",
+              "default": false
+            },
+            "compile": {
+              "id": "/properties/tast/run/compile",
+              "description": "Compila o programa antes de rodar os casos de teste",
+              "type": "boolean",
+              "default": true
             }
           }
         },
@@ -78,6 +137,11 @@
               ]
             }
           }
+        },
+        "deploymentPath": {
+          "id": "/properties/tast/deploymentPath",
+          "description": "Diretório de quarentena do TAST para copiar o fonte compilado",
+          "type": "string"
         }
       }
     },
@@ -89,7 +153,7 @@
         "projectPath": {
           "id": "/properties/crud/properties/projectPath",
           "description": "Diretório dos arquivos de projeto",
-          "type":"string"
+          "type": "string"
         }
       }
     },
@@ -144,37 +208,37 @@
                 "id": "/properties/code/fileAlerts/fileName",
                 "description": "Nome do arquivo (aceita expressão regular)",
                 "type": "string"
-              } 
+              }
             }
           }
         }
       }
     },
     "metrics": {
-        "id": "/properties/metrics",
-        "description": "Configurações de metricas de analise de codigo",
-        "type": "object",
-        "properties": {
-            "methods": {
-                "id": "/properties/metrics/methods",
-                "description": "Metricas de analise de metodos",
-                "type": "object",
-                "properties": {
-                    "max": {
-                        "id": "/properties/metrics/methods/max",
-                        "description": "Numero maximo de metodos que um programa pode conter",
-                        "type": "integer",
-                        "default": 30
-                    },
-                    "LLOC": {
-                        "id": "/properties/metrics/methods/LLOC",
-                        "description": "Numero maximo de linha logicas de codigo que um metodo pode conter",
-                        "type": "integer",
-                        "default": 50
-                    }
-                }
+      "id": "/properties/metrics",
+      "description": "Configurações de metricas de analise de codigo",
+      "type": "object",
+      "properties": {
+        "methods": {
+          "id": "/properties/metrics/methods",
+          "description": "Metricas de analise de metodos",
+          "type": "object",
+          "properties": {
+            "max": {
+              "id": "/properties/metrics/methods/max",
+              "description": "Numero maximo de metodos que um programa pode conter",
+              "type": "integer",
+              "default": 30
+            },
+            "LLOC": {
+              "id": "/properties/metrics/methods/LLOC",
+              "description": "Numero maximo de linha logicas de codigo que um metodo pode conter",
+              "type": "integer",
+              "default": 50
             }
+          }
         }
+      }
     }
   },
   "type": "object"
