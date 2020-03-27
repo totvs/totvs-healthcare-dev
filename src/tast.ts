@@ -266,6 +266,7 @@ export class HealthcareTastExtension {
         let templateCallParams = this.buildCenarioSourceCallParams(method, inputData, outputData, mapFile, testCaseId);
         let templateCompareResults = this.buildCenarioSourceCompareResults(method, inputData, outputData, mapFile, testCaseId);
         let templateDeleteInstance = this.buildCenarioSourceDeleteInstance(method, inputData, outputData, mapFile, testCaseId);
+        let templateSetFilePath = this.buildCenarioSetFilePath(method, inputData, outputData, mapFile, testCaseId);
 
         source = source
             .replace(/\[@programName\]/g, programName)
@@ -283,21 +284,25 @@ export class HealthcareTastExtension {
             .replace(/\[@loadOutputData\]/g, templateLoadOutputData)
             .replace(/\[@addCallParams\]/g, templateCallParams)
             .replace(/\[@addCompareResults\]/g, templateCompareResults)
-            .replace(/\[@deleteInstance\]/g, templateDeleteInstance);
+            .replace(/\[@deleteInstance\]/g, templateDeleteInstance)
+            .replace(/\[@setFilePath\]/g, templateSetFilePath);
         
         let newFile = [config.tast.cenario.output,this.assemblyTestCaseFileName(testCaseId)+'.p'].join('\\');
         fs.writeFileSync(newFile, source);
 
         // armazena dados das temp-tables utilizadas
+        let fileOutput = config.tast.cenario.output;
+        if (config.tast.cenario.dataFiles)
+            fileOutput = config.tast.cenario.dataFiles.output;
         Object.keys(inputData).filter(item => Array.isArray(inputData[item])).forEach(item => {
             let dataTt: Object = inputData[item];
             let fn = this.assemblyTestDataFileName(item.toLowerCase(), testCaseId, 'input');
-            fs.writeFileSync([config.tast.cenario.output,fn].join('\\'), JSON.stringify(dataTt));
+            fs.writeFileSync([fileOutput,fn].join('\\'), JSON.stringify(dataTt));
         });
         Object.keys(outputData).filter(item => Array.isArray(outputData[item])).forEach(item => {
             let dataTt: Object = outputData[item];
             let fn = this.assemblyTestDataFileName(item.toLowerCase(), testCaseId, 'output');
-            fs.writeFileSync([config.tast.cenario.output,fn].join('\\'), JSON.stringify(dataTt));
+            fs.writeFileSync([fileOutput,fn].join('\\'), JSON.stringify(dataTt));
         });
 
         return newFile;
@@ -325,7 +330,7 @@ export class HealthcareTastExtension {
 
         tempTables.forEach(ttName => {
             let tt = mapFile.tempTables.find(item => item.label.toLowerCase() == ttName);
-            if(!isNullOrUndefined(tt)){
+            if(isNullOrUndefined(tt)){
                 let include = mapFile.includes.find(incFile => {
                     let incTt;
                     if (incFile.map)
@@ -492,6 +497,22 @@ export class HealthcareTastExtension {
         variables.forEach(v => {
             result += '\t\tdelete object ' + this.PREFIX_FIELDCOLLECTION + v.name + '.\n';
         })
+
+        return result;
+    }
+
+    private buildCenarioSetFilePath(method: MapMethod, dataInput: any, dataOutput: any, mapFile: MapFile, testCaseId: string): string {
+        let result = '';
+        let config = getConfig();
+
+        if (config.tast.cenario.dataFiles)
+            result = `\tfile-info:file-name = "${config.tast.cenario.dataFiles.relativePath}".\n`
+                   + `\tassign cFilePath = replace(file-info:full-pathname, "~\\", "/")\n`
+                   + `\t       cFilePath = cFilePath + "/".\n`;
+        else
+            result = `\tfile-info:file-name = program-name(1).\n`
+                   + `\tassign cFilePath = replace(file-info:full-pathname, "~\\", "/")\n`
+                   + `\t       cFilePath = substring(cFilePath, 1, r-index(cFilePath, "/")).\n`;
 
         return result;
     }

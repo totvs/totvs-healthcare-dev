@@ -26,9 +26,15 @@ export interface TastBridgeConfig {
     output: string;
 }
 
+export interface TastCenarioDataFileConfig {
+    relativePath:string;
+    output:string;
+}
+
 export interface TastCenarioConfig {
     input: string;
     output: string;
+    dataFiles?: TastCenarioDataFileConfig;
 }
 
 export interface HostConfig {

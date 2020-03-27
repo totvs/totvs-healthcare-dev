@@ -31,3 +31,5 @@ Para as funcionalidades que tratam de fontes Progress, é necessário instalar u
 
 ### runp
 - Bloco de código para rodar um programa com persistência, utilizando as includes do produto
+### logtt
+- Bloco que escreve cada um dos registros de uma temp-table para o log manager

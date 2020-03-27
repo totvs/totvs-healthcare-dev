@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.3.2
+- Pequenas correções referentes a versão anterior
+
+## 1.3.1
+- Correção na geração dos cenário de teste (identificação de includes)
+- Nova configuração para gerar arquivos de dados do cenário de teste em outro diretório
+- Snippet logtt
+
 ## 1.3.0
 - Executar casos de teste associados ao código-fonte ativo
 - Gerar o programa/método do bridge (TAST) sem compilar

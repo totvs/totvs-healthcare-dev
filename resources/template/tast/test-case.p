@@ -17,8 +17,7 @@ def var oAssert as GpsAssert no-undo.
 def var cFilePath as char no-undo.
 
 procedure piBeforeExecute:
-    assign cFilePath = replace(program-name(1), "~\", "/")
-           cFilePath = substring(cFilePath, 1, r-index(cFilePath, "/")).
+[@setFilePath]
 end procedure.
  
 procedure piExecute:
@@ -54,11 +53,6 @@ procedure executa-teste:
     def var cReturn as char no-undo.   
     def var h-[@programName]-aux as handle no-undo.
 
-    // configuracoes de campos das temp-tables de comparacao
-    // parametro 1 = ignorar os campos? (true = todos campos serao considerados, exceto os informados / false = considerados somente os campos informados)
-    // parametro 2 = lista de campos (separados por virgula)
-    // parametro 3 = instancia gerada para o objeto
-
 [@variableInstance]
  
     // atribui dados de entrada
@@ -84,13 +78,6 @@ procedure executa-teste:
     finally:
 [@deleteInstance]
     end finally.
-
-    /* 
-        OBSERVACOES
-        Metodos de comparacao da temp-table:
-            - matchTable: todos os registros entre as temp-tables devem ser considerados
-            - atLeast: temp de retorno deve conter pelo menos os registros da temp esperada (podendo conter mais)
-    */
 
 end.
 

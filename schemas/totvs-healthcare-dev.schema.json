@@ -39,6 +39,23 @@
               "id": "/properties/tast/cenario/output",
               "description": "Diretório onde serão gerados os fontes com o caso de teste",
               "type": "string"
+            },
+            "dataFiles": {
+              "id": "/properties/tast/cenario/dataFiles",
+              "description": "Diretorios para geração de arquivos complementares de dados",
+              "type": "object",
+              "properties": {
+                "relativePath": {
+                  "id": "/properties/tast/cenario/dataFiles/relativePath",
+                  "description": "Diretório relativo no propath onde o codigo do cenario ira buscar os arquivos",
+                  "type": "string"
+                },
+                "output": {
+                  "id": "/properties/tast/cenario/dataFiles/output",
+                  "description": "Diretório onde serão gerados os arquivos complementares para o caso de teste",
+                  "type": "string"
+                }
+              }
             }
           }
         },
