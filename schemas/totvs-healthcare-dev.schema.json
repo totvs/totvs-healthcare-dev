@@ -56,6 +56,11 @@
                   "type": "string"
                 }
               }
+            },
+            "spool": {
+              "id": "/properties/tast/cenario/spool",
+              "description": "Diretório de spool da verificação dos casos de teste, onde serão gerados arquivos de erros na comparação",
+              "type": "string"
             }
           }
         },

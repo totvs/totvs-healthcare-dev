@@ -35,6 +35,7 @@ export interface TastCenarioConfig {
     input: string;
     output: string;
     dataFiles?: TastCenarioDataFileConfig;
+    spool?: string;
 }
 
 export interface HostConfig {

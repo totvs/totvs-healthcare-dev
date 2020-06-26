@@ -1,5 +1,8 @@
 # Change Log
 
+## 1.3.3
+- Spool de erros de execução dos casos de teste
+
 ## 1.3.2
 - Pequenas correções referentes a versão anterior
 

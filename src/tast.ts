@@ -267,6 +267,7 @@ export class HealthcareTastExtension {
         let templateCompareResults = this.buildCenarioSourceCompareResults(method, inputData, outputData, mapFile, testCaseId);
         let templateDeleteInstance = this.buildCenarioSourceDeleteInstance(method, inputData, outputData, mapFile, testCaseId);
         let templateSetFilePath = this.buildCenarioSetFilePath(method, inputData, outputData, mapFile, testCaseId);
+        let templateAssertSpool = this.buildCenarioSetAssertSpool(method, inputData, outputData, mapFile, testCaseId);
 
         source = source
             .replace(/\[@programName\]/g, programName)
@@ -285,7 +286,8 @@ export class HealthcareTastExtension {
             .replace(/\[@addCallParams\]/g, templateCallParams)
             .replace(/\[@addCompareResults\]/g, templateCompareResults)
             .replace(/\[@deleteInstance\]/g, templateDeleteInstance)
-            .replace(/\[@setFilePath\]/g, templateSetFilePath);
+            .replace(/\[@setFilePath\]/g, templateSetFilePath)
+            .replace(/\[@setAssertSpool\]/g, templateAssertSpool);
         
         let newFile = [config.tast.cenario.output,this.assemblyTestCaseFileName(testCaseId)+'.p'].join('\\');
         fs.writeFileSync(newFile, source);
@@ -513,6 +515,20 @@ export class HealthcareTastExtension {
             result = `\tfile-info:file-name = program-name(1).\n`
                    + `\tassign cFilePath = replace(file-info:full-pathname, "~\\", "/")\n`
                    + `\t       cFilePath = substring(cFilePath, 1, r-index(cFilePath, "/")).\n`;
+
+        return result;
+    }
+
+    private buildCenarioSetAssertSpool(method: MapMethod, dataInput: any, dataOutput: any, mapFile: MapFile, testCaseId: string): string {
+        let result = '';
+        let config = getConfig();
+        let programName = this.assemblyTestCaseFileName(testCaseId);
+
+        if (config.tast.cenario.spool)
+            result = `\tassign oAssert:spoolDirectory = "${config.tast.cenario.spool}"\n`
+                   + `\t       oAssert:spoolFileName  = "${programName}".\n`;
+        else
+            result = ``;
 
         return result;
     }

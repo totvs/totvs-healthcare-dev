@@ -26,7 +26,7 @@ procedure piExecute:
     define output parameter cText   as longchar no-undo.
 
     oAssert = new GpsAssert().
-
+[@setAssertSpool]
     do transaction on error undo,leave:
         run executa-teste no-error.
         oAssert:checkError("Erro na execucao do teste").

@@ -18,7 +18,7 @@
             "def var lc-$1-aux as longchar no-undo.",
             "for each ${1}:",
             "\ttemp-table $1:default-buffer-handle:serialize-row(\"json\", \"longchar\", lc-$1-aux, true).",
-            "\tlog-manager:write-messahe(string(lc-$1-aux),\"TOTVS-TT\").",
+            "\tlog-manager:write-message(string(lc-$1-aux),\"TOTVS-TT\").",
             "end."
         ]
     }
