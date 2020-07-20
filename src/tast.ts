@@ -157,8 +157,8 @@ export class HealthcareTastExtension {
         let dataAfter = fs.readFileSync([templatePath, 'bo-injection-after.p'].join('\\')).toString();
         let dataActive = vscode.window.activeTextEditor.document.getText();
         // renomeia a procedure original
-        let reProc: RegExp = new RegExp('(?:proc[edure]*){1}[\\s\\t\\n]+(' + method.name + '){1}[\\s\\t\\n\\.\\:]+', 'gim');
-        dataActive = dataActive.replace(reProc, 'procedure GPS_' + method.name + ':\n\t');
+        let reProc: RegExp = new RegExp('(?:proc[edure]*){1}[\\s\\t\\n]+(' + method.name + '){1}([\\s\\t\\n\\.\\:]+)', 'gim');
+        dataActive = dataActive.replace(reProc, 'procedure GPS_$1$2');
         // altera template
         dataBefore = this.parseBridgeTemplate(dataBefore, method);
         dataAfter = this.parseBridgeTemplate(dataAfter, method);
@@ -191,7 +191,7 @@ export class HealthcareTastExtension {
                 line += 'table for ' + param.name;
             }
             else {
-                line += param.name + ' ' + param.asLike + ' ' + param.dataType + ' no-undo';
+                line += `${param.name} ${param.asLike} ${param.dataType} ${param.additional || 'no-undo'}`;
             }
             result += line + '.\n';
         });
@@ -372,7 +372,7 @@ export class HealthcareTastExtension {
         let result = '';
         // variaveis
         let variables = method.params.filter(item => item.dataType != 'temp-table');
-        variables.forEach(v => { result += '\tdef var ' + v.name + ' ' + v.asLike + ' ' + v.dataType + ' no-undo.\n'; })
+        variables.forEach(v => { result += `\tdef var ${v.name} ${v.asLike} ${v.dataType} ${v.additional || 'no-undo'}.\n`; })
         // controle de campos das temp-tables de saida
         variables = method.params.filter(item => item.dataType == 'temp-table' && item.direction != 'input');
         variables.forEach(v => {
