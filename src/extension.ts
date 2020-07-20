@@ -26,9 +26,6 @@ export function activate(context: vscode.ExtensionContext): void {
 	// Extensão de Formatação de Código
 	new HealthcareFormattingExtension(context);
 
-	// teste
-	//vscode.commands.registerCommand('healthcare.log.analyse.appServer', () => { vscode.window.showInformationMessage('TESTE') });
-
 }
 
 export function deactivate() {

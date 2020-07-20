@@ -157,8 +157,8 @@ export class HealthcareTastExtension {
         let dataAfter = fs.readFileSync([templatePath, 'bo-injection-after.p'].join('\\')).toString();
         let dataActive = vscode.window.activeTextEditor.document.getText();
         // renomeia a procedure original
-        let reProc: RegExp = new RegExp('(?:proc[edure]*){1}[\\s\\t\\n]+(' + method.name + '){1}[\\s\\t\\n\\.\\:]+', 'gim');
-        dataActive = dataActive.replace(reProc, 'procedure GPS_' + method.name + ':\n\t');
+        let reProc: RegExp = new RegExp('(?:proc[edure]*){1}[\\s\\t\\n]+(' + method.name + '){1}([\\s\\t\\n\\.\\:]+)', 'gim');
+        dataActive = dataActive.replace(reProc, 'procedure GPS_$1$2');
         // altera template
         dataBefore = this.parseBridgeTemplate(dataBefore, method);
         dataAfter = this.parseBridgeTemplate(dataAfter, method);
@@ -186,12 +186,15 @@ export class HealthcareTastExtension {
     private buildBridgeSourceInputParams(method: MapMethod): string {
         let result = '';
         method.params.forEach(param => {
-            let line = '\tdef ' + param.direction + ' parameter ';
+            let line = '\t';
             if (param.dataType == 'temp-table') {
-                line += 'table for ' + param.name;
+                line += `def ${param.direction} parameter table for ${param.name}`;
+            }
+            else if (param.dataType == 'buffer') {
+                line += `def parameter buffer ${param.name} for ${param.additional}`;
             }
             else {
-                line += param.name + ' ' + param.asLike + ' ' + param.dataType + ' no-undo';
+                line += `def ${param.direction} parameter ${param.name} ${param.asLike} ${param.dataType} ${param.additional || 'no-undo'}`;
             }
             result += line + '.\n';
         });
@@ -201,14 +204,17 @@ export class HealthcareTastExtension {
     private buildBridgeSourceCallParams(method: MapMethod): string {
         let result = '';
         method.params.forEach(param => {
-            let line = '\t\t\t' + param.direction + ' ';
+            let line = '\t\t\t';
             if (result != '')
                 result += ',\n';
             if (param.dataType == 'temp-table') {
-                line += 'table ' + param.name;
+                line += `${param.direction} table ${param.name}`;
+            }
+            else if (param.dataType == 'buffer') {
+                line += `buffer ${param.name}`;
             }
             else {
-                line += param.name;
+                line += `${param.direction} ${param.name}`;
             }
             result += line;
         });
@@ -218,6 +224,11 @@ export class HealthcareTastExtension {
     private buildBridgeSourceJsonInputParams(method: MapMethod): string {
         let result = '';
         method.params.filter(param => param.direction == 'input' || param.direction == 'input-output').forEach(param => {
+            // ignores extent
+            if ((param.additional || '').toLowerCase().includes('extent')) {
+                return;
+            }
+
             let line = '\tGPS_object:add("' + param.name + '", ';
             if (param.dataType == 'temp-table') {
                 line += 'GPS_JsonUtils:getJsonArrayFromTable(temp-table ' + param.name + ':default-buffer-handle)).';
@@ -233,6 +244,11 @@ export class HealthcareTastExtension {
     private buildBridgeSourceJsonOutputParams(method: MapMethod): string {
         let result = '';
         method.params.filter(param => param.direction == 'output' || param.direction == 'input-output').forEach(param => {
+            // ignores extent
+            if ((param.additional || '').toLowerCase().includes('extent')) {
+                return;
+            }
+            
             let line = '\tGPS_object:add("' + param.name + '", ';
             if (param.dataType == 'temp-table') {
                 line += 'GPS_JsonUtils:getJsonArrayFromTable(temp-table ' + param.name + ':default-buffer-handle)).';
@@ -371,8 +387,8 @@ export class HealthcareTastExtension {
     private buildCenarioSourceVariableDefinition(method: MapMethod, dataInput: any, dataOutput: any, mapFile: MapFile, testCaseId: string): string {
         let result = '';
         // variaveis
-        let variables = method.params.filter(item => item.dataType != 'temp-table');
-        variables.forEach(v => { result += '\tdef var ' + v.name + ' ' + v.asLike + ' ' + v.dataType + ' no-undo.\n'; })
+        let variables = method.params.filter(item => item.dataType != 'temp-table' && item.dataType != 'buffer');
+        variables.forEach(v => { result += `\tdef var ${v.name} ${v.asLike} ${v.dataType} ${v.additional || 'no-undo'}.\n`; })
         // controle de campos das temp-tables de saida
         variables = method.params.filter(item => item.dataType == 'temp-table' && item.direction != 'input');
         variables.forEach(v => {
@@ -386,7 +402,7 @@ export class HealthcareTastExtension {
         let result = '';
 
         // variaveis
-        let variables = method.params.filter(item => item.dataType != 'temp-table' && item.direction != 'output');
+        let variables = method.params.filter(item => item.dataType != 'temp-table' && item.dataType != 'buffer' && item.direction != 'output');
         variables.forEach(v => {
             let value = dataInput[v.name];
             if (isString(value))
@@ -450,14 +466,17 @@ export class HealthcareTastExtension {
     private buildCenarioSourceCallParams(method: MapMethod, dataInput: any, dataOutput: any, mapFile: MapFile, testCaseId: string): string {
         let result = '';
         method.params.forEach(param => {
-            let line = '\t\t' + param.direction + ' ';
+            let line = '\t\t';
             if (result != '')
                 result += ',\n';
             if (param.dataType == 'temp-table') {
-                line += 'table ' + param.name;
+                line += `${param.direction} table ${param.name}`;
+            }
+            else if (param.dataType == 'buffer') {
+                line += `buffer ${param.additional}`;
             }
             else {
-                line += param.name;
+                line += `${param.direction} ${param.name}`;
             }
             result += line;
         });
@@ -480,7 +499,7 @@ export class HealthcareTastExtension {
             if (param.dataType == 'temp-table') {
                 result += '\toAssert:matchTable(temp-table GPS_' + param.name + ':default-buffer-handle, temp-table ' + param.name + ':default-buffer-handle, ' + this.PREFIX_FIELDCOLLECTION + param.name + ').\n';
             }
-            else {
+            else if (param.dataType != 'buffer') {
                 let value = dataOutput[param.name];
                 if (isString(value))
                     value = '"' + value + '"';

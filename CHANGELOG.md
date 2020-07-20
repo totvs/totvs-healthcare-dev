@@ -1,5 +1,8 @@
 # Change Log
 
+## 1.3.4
+- Ajustes na geração do brige e cenários de TAST (procedures privadas, parametros extent)
+
 ## 1.3.3
 - Spool de erros de execução dos casos de teste
 
