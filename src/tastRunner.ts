@@ -25,6 +25,7 @@ interface TestCaseQueue {
 interface TestCaseData {
     id: number;
     status?: string;
+    propathCase?: string;
 }
 
 export class HealthcareTastRunnerExtension {
@@ -34,7 +35,7 @@ export class HealthcareTastRunnerExtension {
     private inExecution: { RUN: boolean };
     private abortExecution: { RUN: boolean };
     private runnerConfig: TastRunnerConfig;
-    private sessionCookies: string[] = [];
+    public sessionCookies: string[] = [];
 
     private readonly ELASTIC_SEARCH_PATH = '/_search';
     private readonly TOTVS_LOGIN_PATH = '/dts/datasul-rest/resources/login?username=super&password=hFG6ihTXl1PTTLM7UbpGtLAl64E%3D';
@@ -195,6 +196,8 @@ export class HealthcareTastRunnerExtension {
     }
 
     private requestLogin(): Promise<boolean> {
+        this.runnerConfig = this.getRunnerConfig();
+
         this.sessionCookies = [];
 
         let result = false;
@@ -405,7 +408,7 @@ export class HealthcareTastRunnerExtension {
         });
     }
 
-    private runTestCases(cases: string[]) {
+    public runTestCases(cases: string[]) {
         let results: TestCaseQueue[] = [];
 
         cases.forEach(async item => {
@@ -440,7 +443,15 @@ export class HealthcareTastRunnerExtension {
                 this.openResultDocument(results);
         }
 
-        this.runNext(results, fncFinish);
+        if(this.sessionCookies.length == 0){
+            this.requestLogin().then(() => {
+                this.runNext(results, fncFinish);
+            });
+        } else {
+            this.runNext(results, fncFinish);
+        }
+
+        
     }
 
     private runNext(results: TestCaseQueue[], onFinish?: Function) {
@@ -501,6 +512,8 @@ export class HealthcareTastRunnerExtension {
     }
 
     private getTestCase(caseName: string): Promise<any> {
+        this.runnerConfig = this.getRunnerConfig();        
+
         const getOptions = {
             hostname: this.runnerConfig.totvs.host,
             port: this.runnerConfig.totvs.port,
@@ -549,11 +562,28 @@ export class HealthcareTastRunnerExtension {
         });
     }
 
-    private runTestCase(testCase: TestCaseQueue): Promise<any> {
-        return new Promise(resolve => {
-            const jsonData = {
-                tmpCaseTest: [testCase.data]
-            };
+    public runTestCase(testCase: TestCaseQueue): Promise<any> {
+        return new Promise(resolve => {            
+
+            let jsonData = {};
+            if(!testCase.CASENAME){
+                jsonData = {
+                    tmpCaseTest: [{                                                
+                        'propathCase': 'financas\\test\\',
+                        'caseName': ''                        
+                    }]
+                };
+            } else {
+                jsonData = {
+                    tmpCaseTest: [{
+                        'caseName': testCase.data['caseName'],
+                        'log-executa-rpw': testCase.data['log-executa-rpw'],
+                        'propathCase': testCase.data['propathCase'],
+                        'id': testCase.data['id']
+                    }]
+                };
+            }
+            
             const postData = JSON.stringify(jsonData);
             const postOptions = {
                 hostname: 'cxs-tast',
@@ -564,6 +594,8 @@ export class HealthcareTastRunnerExtension {
                 headers: {
                     'Cookie': this.sessionCookies.join('; '),
                     'Content-Type': 'application/json',
+                    'Server': 'Apache-Coyote/1.1',
+                    'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0, post-check=0, pre-check=0',
                     'Content-Length': postData.length
                 }
             }
@@ -586,6 +618,7 @@ export class HealthcareTastRunnerExtension {
                         resultData = JSON.parse(dataBuffer.toString());
                     }
                     else {
+                        resultData = JSON.parse(dataBuffer.toString());
                         outputChannel.appendLine(`> Erro ao executar teste ${testCase.CASENAME} (status ${res.statusCode})`);
                     }
                 })
