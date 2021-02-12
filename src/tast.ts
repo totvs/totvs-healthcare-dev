@@ -1,22 +1,25 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { MapFile, MapMethod } from './models';
+import { ITastFileMap, MapFile, MapMethod } from './models';
 import { getConfig } from './configFile';
 import { changePath, mkdir } from './utils';
-import { isString, isNullOrUndefined } from 'util';
 import { HealthcareOpenEdgeUtils } from './openEdgeUtils';
 
 export class HealthcareTastExtension {
 
     private context: vscode.ExtensionContext;
     private readonly PREFIX_FIELDCOLLECTION = 'oFd';
-    private readonly EXT_GETMAP = 'abl.currentFile.getMap';
+    private readonly EXT_GETMAP = 'abl.getMap';
+    private readonly EXT_CURRENT_GETMAP = 'abl.currentFile.getMap';
     private readonly THIS_EXTENSION = 'totvs-healthcare.totvs-healthcare-dev'
+    private readonly MIN_VER_OPENEDGE = '1.0.3';
+    private fileMapping: ITastFileMap[] = [];
 
     constructor(context: vscode.ExtensionContext) {
         this.context = context;
         this.registerCommands();
+        this.subscribeEvents();
     }
 
     private registerCommands() {
@@ -24,17 +27,101 @@ export class HealthcareTastExtension {
         this.context.subscriptions.push(vscode.commands.registerCommand('healthcare.tast.bridge.method.clipboard', () => { this.execClipboardBridgeMethod() }));
         this.context.subscriptions.push(vscode.commands.registerCommand('healthcare.tast.bridge.compile', () => { this.execGenerateBridge() }));
         this.context.subscriptions.push(vscode.commands.registerCommand('healthcare.tast.cenario.compile', () => { this.execGenerateCenario() }));
+        this.context.subscriptions.push(vscode.commands.registerCommand('healthcare.tast.cenario.unit', () => { this.execGenerateUnitCenario() }));
+    }
+
+    private subscribeEvents() {
+        vscode.workspace.textDocuments.forEach(document => this.onOpenDocument(document));
+
+        vscode.workspace.onDidOpenTextDocument(document => this.onOpenDocument(document));
+        vscode.workspace.onDidSaveTextDocument(document => this.onSaveDocument(document));
     }
 
     private templatePath(): string {
         return [vscode.extensions.getExtension(this.THIS_EXTENSION).extensionPath, 'resources', 'template', 'tast'].join('\\');
     }
 
+    private onOpenDocument(document: vscode.TextDocument) {
+        let config = getConfig();
+        if ((config?.tast?.cenario?.autosuggest)&&(path.extname(document.fileName).toLowerCase() == '.p')) {
+            let oeUtils = new HealthcareOpenEdgeUtils();
+            if (oeUtils.hasMinimalOpenEdgeExtension(this.MIN_VER_OPENEDGE)) {
+                this.insertDocumentMap(document);
+            }
+        }
+    }
+
+    private onSaveDocument(document: vscode.TextDocument) {
+        let config = getConfig();
+        if ((config?.tast?.cenario?.autosuggest)&&(path.extname(document.fileName).toLowerCase() == '.p')) {
+            let oeUtils = new HealthcareOpenEdgeUtils();
+            if (oeUtils.hasMinimalOpenEdgeExtension(this.MIN_VER_OPENEDGE)) {
+                let item = this.fileMapping.find(f => f.fsPath == document.uri.fsPath);
+                if (item?.mapFile) {
+                    setTimeout(() => this.compareDocumentMethods(document), 2000);
+                }
+            }
+        }
+    }
+
+    private insertDocumentMap(document: vscode.TextDocument) {
+        if (!document.isUntitled) {
+            let item = this.fileMapping.find(f => f.fsPath == document.uri.fsPath);
+            if (!item) {
+                item = { fsPath: document.uri.fsPath };
+                this.fileMapping.push(item);
+            }
+            this.updateDocumentMap(document);
+        }
+    }
+
+    private updateDocumentMap(document: vscode.TextDocument) {
+        const item = this.fileMapping.find(f => f.fsPath == document.uri.fsPath);
+        if (!item) {
+            return;
+        }
+        let oeUtils = new HealthcareOpenEdgeUtils();
+        let _getMap = this.EXT_GETMAP;
+        if (oeUtils.hasMinimalOpenEdgeExtension(this.MIN_VER_OPENEDGE)) {
+            setTimeout(() => vscode.commands.executeCommand(_getMap, document.uri.fsPath).then((data: MapFile) => item.mapFile = data), 2000);
+        }
+    }
+
+    private compareDocumentMethods(document: vscode.TextDocument) {
+        const item = this.fileMapping.find(f => f.fsPath == document.uri.fsPath);
+        if (!item?.mapFile) {
+            return;
+        }
+        let oeUtils = new HealthcareOpenEdgeUtils();
+        let _getMap = this.EXT_GETMAP;
+        if (oeUtils.hasMinimalOpenEdgeExtension(this.MIN_VER_OPENEDGE)) {
+            vscode.commands.executeCommand(_getMap, document.uri.fsPath).then((data: MapFile) => {
+                const oldMethods = item.mapFile.methods?.map(m => m.name.toLowerCase()) || [];
+                const newMethods = data.methods?.map(m => m.name.toLowerCase()) || [];
+                const dif = [];
+                newMethods.forEach(name => {
+                    if (!oldMethods.includes(name)) {
+                        dif.push(name);
+                    }
+                });
+                if (dif.length > 0) {
+                    vscode.window.showInformationMessage('Deseja criar casos de teste para os novos métodos?', ...['Sim', 'Não']).then(result => {
+                        if (result == 'Sim') {
+                            const methods = data.methods.filter(m => dif.includes(m.name.toLowerCase()));
+                            methods.forEach(m => this.createUnitCenario(m));
+                            this.updateDocumentMap(document);
+                        }
+                    });
+                }
+            });
+        }
+    }
+
     private chooseMethod(): Promise<MapMethod> {
         let oeUtils = new HealthcareOpenEdgeUtils();
 
         if (oeUtils.hasOpenEdgeExtension(true)) {
-            let _getMap = this.EXT_GETMAP;
+            let _getMap = this.EXT_CURRENT_GETMAP;
             return new Promise(resolve =>  {
                 vscode.commands.executeCommand(_getMap).then((data: MapFile) => {
                     try {
@@ -44,11 +131,11 @@ export class HealthcareTastExtension {
                             if ((item != null) && (item != ''))
                                 resolve(methods.find(v => v.name == item));
                             else
-                                resolve();
+                                resolve(null);
                         });
                     }
                     catch(e) {
-                        resolve();
+                        resolve(null);
                     }
                 });
             });
@@ -59,23 +146,26 @@ export class HealthcareTastExtension {
 
     private getBridgeSource(): Promise<string> {
         return this.chooseMethod().then(method => {
-            if (isNullOrUndefined(method))
+            if (!method) {
                 return null;
+            }
             return this.createBridgeProgram(method);
         });
     }
 
     private execShowBridge() {
         this.getBridgeSource().then(data => {
-            if (!isNullOrUndefined(data))
+            if (data) {
                 vscode.workspace.openTextDocument({ content: data, language: 'abl' }).then(doc => vscode.window.showTextDocument(doc));
+            }
         });
     }
 
     private execClipboardBridgeMethod() {
         return this.chooseMethod().then(method => {
-            if (isNullOrUndefined(method))
+            if (!method) {
                 return;
+            }
             let templatePath = this.templatePath();
             let dataAfter = fs.readFileSync([templatePath, 'bo-injection-after.p'].join('\\')).toString();
             dataAfter = this.parseBridgeTemplate(dataAfter, method);
@@ -89,8 +179,9 @@ export class HealthcareTastExtension {
 
         if (oeUtils.hasOpenEdgeExtension(true)) {
             this.chooseMethod().then(method => {
-                if (isNullOrUndefined(method))
+                if (!method) {
                     return;
+                }
                 let data = this.createBridgeProgram(method);
                 let wf = vscode.workspace.getWorkspaceFolder(vscode.window.activeTextEditor.document.uri);
                 let tempDest = [wf.uri.fsPath, '.' + path.basename(vscode.window.activeTextEditor.document.uri.fsPath)].join('\\');
@@ -126,7 +217,7 @@ export class HealthcareTastExtension {
 
         if (oeUtils.hasOpenEdgeExtension(true)) {
             // Busca todos os métodos do arquivo atual
-            vscode.commands.executeCommand(this.EXT_GETMAP).then((data: MapFile) => {
+            vscode.commands.executeCommand(this.EXT_CURRENT_GETMAP).then((data: MapFile) => {
 
                 let files = fs.readdirSync(config.tast.cenario.input);
                 let baseName = path.basename(vscode.window.activeTextEditor.document.uri.fsPath);
@@ -149,6 +240,23 @@ export class HealthcareTastExtension {
                 });
             });
         }
+    }
+
+    private execGenerateUnitCenario() {
+        this.chooseMethod().then(method => {
+            if (method) {
+                this.createUnitCenario(method);
+            }
+        });
+    }
+
+    private createUnitCenario(method: MapMethod) {
+        if (!method) {
+            return;
+        }
+        let templatePath = this.templatePath();
+        let data = fs.readFileSync([templatePath, 'unit-test-case.p'].join('\\')).toString();
+        return vscode.commands.executeCommand(this.EXT_CURRENT_GETMAP).then((mapFile: MapFile) => this.parseAnsSaveUnitCenarioTemplate(data, method, mapFile));
     }
 
     private createBridgeProgram(method: MapMethod): string {
@@ -272,18 +380,18 @@ export class HealthcareTastExtension {
         let method = mapFile.methods.find(item => item.name.toLowerCase() == procedureName.toLowerCase());
 
         let config = getConfig();
-        let templateIncludes = this.buildCenarioSourceIncludes(method, inputData, outputData, mapFile, testCaseId);
-        let templateTempDefinition = this.buildCenarioSourceTempDefinition(method, inputData, outputData, mapFile, testCaseId);
-        let templateVarDefinition = this.buildCenarioSourceVariableDefinition(method, inputData, outputData, mapFile, testCaseId);
-        let templateVarAssign = this.buildCenarioSourceVariableAssign(method, inputData, outputData, mapFile, testCaseId);
-        let templateVarInstance = this.buildCenarioSourceVariableInstance(method, inputData, outputData, mapFile, testCaseId);
-        let templateLoadInputData = this.buildCenarioSourceLoadInputData(method, inputData, outputData, mapFile, testCaseId);
-        let templateLoadOutputData = this.buildCenarioSourceLoadOutputData(method, inputData, outputData, mapFile, testCaseId);
-        let templateCallParams = this.buildCenarioSourceCallParams(method, inputData, outputData, mapFile, testCaseId);
-        let templateCompareResults = this.buildCenarioSourceCompareResults(method, inputData, outputData, mapFile, testCaseId);
-        let templateDeleteInstance = this.buildCenarioSourceDeleteInstance(method, inputData, outputData, mapFile, testCaseId);
-        let templateSetFilePath = this.buildCenarioSetFilePath(method, inputData, outputData, mapFile, testCaseId);
-        let templateAssertSpool = this.buildCenarioSetAssertSpool(method, inputData, outputData, mapFile, testCaseId);
+        let templateIncludes = this.buildCenarioSourceIncludes(inputData, outputData, mapFile);
+        let templateTempDefinition = this.buildCenarioSourceTempDefinition(outputData);
+        let templateVarDefinition = this.buildCenarioSourceVariableDefinition(method, true);
+        let templateVarAssign = this.buildCenarioSourceVariableAssign(method, inputData);
+        let templateVarInstance = this.buildCenarioSourceVariableInstance(method);
+        let templateLoadInputData = this.buildCenarioSourceLoadInputData(inputData, testCaseId);
+        let templateLoadOutputData = this.buildCenarioSourceLoadOutputData(outputData, testCaseId);
+        let templateCallParams = this.buildCenarioSourceCallParams(method);
+        let templateCompareResults = this.buildCenarioSourceCompareResults(method, outputData, true);
+        let templateDeleteInstance = this.buildCenarioSourceDeleteInstance(method);
+        let templateSetFilePath = this.buildCenarioSetFilePath();
+        let templateAssertSpool = this.buildCenarioSetAssertSpool(testCaseId);
 
         source = source
             .replace(/\[@programName\]/g, programName)
@@ -326,6 +434,79 @@ export class HealthcareTastExtension {
         return newFile;
     }
 
+    private parseAnsSaveUnitCenarioTemplate(source: string, method: MapMethod, mapFile: MapFile) {
+        let wf = vscode.workspace.getWorkspaceFolder(vscode.window.activeTextEditor.document.uri);
+
+        let config = getConfig();
+        let programName = path.basename(vscode.window.activeTextEditor.document.uri.fsPath, '.p');
+        let programPath = path.dirname(vscode.window.activeTextEditor.document.uri.fsPath.replace(wf.uri.fsPath + '\\', '').replace(/\\/g, '/'));
+        let procedureName = method.name;
+        let testCaseId = this.getNextFileName(`CT_${programName}_${procedureName}`, config?.tast?.cenario?.output, '.p');
+
+        let inputData: any = {};
+        let outputData: any = { $error: false, $return: '' };
+        method.params
+            .filter(p => p.direction == 'input' || p.direction == 'input-output')
+            .filter(p => p.dataType != 'temp-table' && p.dataType != 'buffer')
+            .forEach(p => { inputData[p.name] = null });
+        method.params
+            .filter(p => p.direction == 'output' || p.direction == 'input-output')
+            .filter(p => p.dataType != 'temp-table' && p.dataType != 'buffer')
+            .forEach(p => { outputData[p.name] = null });
+
+        let templateIncludes = this.buildUnitCenarioSourceIncludes(method, mapFile);
+        let templateVarDefinition = this.buildCenarioSourceVariableDefinition(method);
+        let templateVarAssign = this.buildCenarioSourceVariableAssign(method, inputData);
+        let templateCallParams = this.buildCenarioSourceCallParams(method);
+        let templateCompareResults = this.buildCenarioSourceCompareResults(method, outputData);
+        let templateAssertSpool = this.buildCenarioSetAssertSpool(testCaseId);
+
+        source = source
+            .replace(/\[@programName\]/g, programName)
+            .replace(/\[@programPath\]/g, programPath)
+            .replace(/\[@procedureName\]/g, procedureName)
+            .replace(/\[@testId\]/g, testCaseId)
+            .replace(/\[@testFile\]/g, this.assemblyTestCaseFileName(testCaseId)+'.p')
+            .replace(/\[@date\]/g, (new Date()).toLocaleDateString())
+            .replace(/\[@includes\]/g, templateIncludes)
+            .replace(/\[@variableDefinition\]/g, templateVarDefinition)
+            .replace(/\[@variableAssign\]/g, templateVarAssign)
+            .replace(/\[@addCallParams\]/g, templateCallParams)
+            .replace(/\[@addCompareResults\]/g, templateCompareResults)
+            .replace(/\[@setAssertSpool\]/g, templateAssertSpool);
+        this.saveUnitCenarioTemplate(source, testCaseId);
+    }
+
+    private saveUnitCenarioTemplate(source: string, testCaseId: string) {
+        let config = getConfig();
+
+        if (config?.tast?.cenario?.output) {
+            let newFile = [config.tast.cenario.output,this.assemblyTestCaseFileName(testCaseId)+'.p'].join('\\');
+            fs.writeFileSync(newFile, source);
+            vscode.workspace.openTextDocument(newFile).then(doc => vscode.window.showTextDocument(doc, { preview: false }));
+        }
+        else {
+            vscode.workspace.openTextDocument({ content: source, language: 'abl' }).then(doc => vscode.window.showTextDocument(doc));
+        }
+    }
+
+    private getNextFileName(filename: string, path: string, ext: string, variation?: number): string {
+        if (!path) {
+            return filename;
+        }
+        let newFilename = filename;
+        if (variation) {
+            newFilename += `_${variation}`;
+        }
+        const newFile = [path,newFilename].join('\\') + ext;
+        if (!fs.existsSync(newFile)) {
+            return newFilename;
+        }
+        else {
+            return this.getNextFileName(filename, path, ext, (variation ? ++variation : 1));
+        }
+    }
+
     private assemblyTestCaseFileName(testId: string): string {
         return testId;
     }
@@ -334,7 +515,7 @@ export class HealthcareTastExtension {
         return this.assemblyTestCaseFileName(testId) + '.' + name + '.' + dataType + '.json';
     }
 
-    private buildCenarioSourceIncludes(method: MapMethod, dataInput: any, dataOutput: any, mapFile: MapFile, testCaseId: string): string {
+    private buildCenarioSourceIncludes(dataInput: any, dataOutput: any, mapFile: MapFile): string {
         let tempTables: string[] = [];
         let includes: string[] = [];
 
@@ -348,7 +529,7 @@ export class HealthcareTastExtension {
 
         tempTables.forEach(ttName => {
             let tt = mapFile.tempTables.find(item => item.label.toLowerCase() == ttName);
-            if(isNullOrUndefined(tt)){
+            if (!tt) {
                 let include = mapFile.includes.find(incFile => {
                     let incTt;
                     if (incFile.map)
@@ -368,7 +549,35 @@ export class HealthcareTastExtension {
         return result;
     }
 
-    private buildCenarioSourceTempDefinition(method: MapMethod, dataInput: any, dataOutput: any, mapFile: MapFile, testCaseId: string): string {
+    private buildUnitCenarioSourceIncludes(method: MapMethod, mapFile: MapFile): string {
+        let includes: string[] = [];
+        let tempTables = method.params.filter(p => p.dataType == 'temp-table');
+
+        tempTables.forEach(tempTable => {
+            let ttName = tempTable.name.toLowerCase();
+            let tt = mapFile.tempTables.find(item => item.label.toLowerCase() == ttName);
+            if (!tt) {
+                let include = mapFile.includes.find(incFile => {
+                    let incTt;
+                    if (incFile.map)
+                        incTt = incFile.map.tempTables.find(item => item.label.toLowerCase() == ttName);
+                    return (incTt != null);
+                });
+                if (include) {
+                    includes.push(include.name);
+                }
+            }
+        });
+
+        let result = '';
+        includes = includes.filter(function (value, index, self) {
+            return self.indexOf(value) === index;
+        });
+        includes.forEach(item => { result += '{' + item + '}\n'; });
+        return result;
+    }
+
+    private buildCenarioSourceTempDefinition(dataOutput: any): string {
         let tempTables: string[] = [];
 
         Object.keys(dataOutput).forEach(item => {
@@ -384,36 +593,42 @@ export class HealthcareTastExtension {
         return result;
     }
 
-    private buildCenarioSourceVariableDefinition(method: MapMethod, dataInput: any, dataOutput: any, mapFile: MapFile, testCaseId: string): string {
+    private buildCenarioSourceVariableDefinition(method: MapMethod, tempTableComparison?: boolean): string {
         let result = '';
         // variaveis
         let variables = method.params.filter(item => item.dataType != 'temp-table' && item.dataType != 'buffer');
         variables.forEach(v => { result += `\tdef var ${v.name} ${v.asLike} ${v.dataType} ${v.additional || 'no-undo'}.\n`; })
         // controle de campos das temp-tables de saida
-        variables = method.params.filter(item => item.dataType == 'temp-table' && item.direction != 'input');
-        variables.forEach(v => {
-            result += '\tdef var ' + this.PREFIX_FIELDCOLLECTION + v.name + ' as AssertFieldCollection no-undo.\n';
-        })
+        if (tempTableComparison) {
+            variables = method.params.filter(item => item.dataType == 'temp-table' && item.direction != 'input');
+            variables.forEach(v => {
+                result += '\tdef var ' + this.PREFIX_FIELDCOLLECTION + v.name + ' as AssertFieldCollection no-undo.\n';
+            });
+        }
 
         return result;
     }
 
-    private buildCenarioSourceVariableAssign(method: MapMethod, dataInput: any, dataOutput: any, mapFile: MapFile, testCaseId: string): string {
+    private buildCenarioSourceVariableAssign(method: MapMethod, dataInput: any): string {
         let result = '';
 
         // variaveis
         let variables = method.params.filter(item => item.dataType != 'temp-table' && item.dataType != 'buffer' && item.direction != 'output');
         variables.forEach(v => {
             let value = dataInput[v.name];
-            if (isString(value))
+            if (value === null || value === undefined) {
+                value = '?';
+            }
+            else if (typeof value === 'string') {
                 value = '"' + value + '"';
+            }
             result += '\t\t' + v.name + ' = ' + value + '\n';
         })
 
         return result;
     }
 
-    private buildCenarioSourceVariableInstance(method: MapMethod, dataInput: any, dataOutput: any, mapFile: MapFile, testCaseId: string): string {
+    private buildCenarioSourceVariableInstance(method: MapMethod): string {
         let result = '';
 
         // controle de campos das temp-tables de saida
@@ -425,7 +640,7 @@ export class HealthcareTastExtension {
         return result;
     }
 
-    private buildCenarioSourceLoadInputData(method: MapMethod, dataInput: any, dataOutput: any, mapFile: MapFile, testCaseId: string): string {
+    private buildCenarioSourceLoadInputData(dataInput: any, testCaseId: string): string {
         let tempTables: string[] = [];
 
         Object.keys(dataInput).forEach(item => {
@@ -444,7 +659,7 @@ export class HealthcareTastExtension {
         return result;
     }
 
-    private buildCenarioSourceLoadOutputData(method: MapMethod, dataInput: any, dataOutput: any, mapFile: MapFile, testCaseId: string): string {
+    private buildCenarioSourceLoadOutputData(dataOutput: any, testCaseId: string): string {
         let tempTables: string[] = [];
 
         Object.keys(dataOutput).forEach(item => {
@@ -463,10 +678,10 @@ export class HealthcareTastExtension {
         return result;
     }
 
-    private buildCenarioSourceCallParams(method: MapMethod, dataInput: any, dataOutput: any, mapFile: MapFile, testCaseId: string): string {
+    private buildCenarioSourceCallParams(method: MapMethod): string {
         let result = '';
         method.params.forEach(param => {
-            let line = '\t\t';
+            let line = '\t\t\t';
             if (result != '')
                 result += ',\n';
             if (param.dataType == 'temp-table') {
@@ -483,7 +698,7 @@ export class HealthcareTastExtension {
         return result;
     }
 
-    private buildCenarioSourceCompareResults(method: MapMethod, dataInput: any, dataOutput: any, mapFile: MapFile, testCaseId: string): string {
+    private buildCenarioSourceCompareResults(method: MapMethod, dataOutput: any, tempTableComparison?: boolean): string {
         let result = '';
         let testValue;
 
@@ -497,12 +712,18 @@ export class HealthcareTastExtension {
         // adiciona comparação de parametros de saida
         method.params.filter(item => item.direction != 'input').forEach(param => {
             if (param.dataType == 'temp-table') {
-                result += '\toAssert:matchTable(temp-table GPS_' + param.name + ':default-buffer-handle, temp-table ' + param.name + ':default-buffer-handle, ' + this.PREFIX_FIELDCOLLECTION + param.name + ').\n';
+                if (tempTableComparison) {
+                    result += '\toAssert:matchTable(temp-table GPS_' + param.name + ':default-buffer-handle, temp-table ' + param.name + ':default-buffer-handle, ' + this.PREFIX_FIELDCOLLECTION + param.name + ').\n';
+                }
             }
             else if (param.dataType != 'buffer') {
                 let value = dataOutput[param.name];
-                if (isString(value))
+                if (value === null || value === undefined) {
+                    value = '?';
+                }
+                else if (typeof value === 'string') {
                     value = '"' + value + '"';
+                }
                 result += '\toAssert:equal("' + param.name + '", ' + value + ', ' + param.name + ').\n';
             }
         });
@@ -510,7 +731,7 @@ export class HealthcareTastExtension {
         return result;
     }
 
-    private buildCenarioSourceDeleteInstance(method: MapMethod, dataInput: any, dataOutput: any, mapFile: MapFile, testCaseId: string): string {
+    private buildCenarioSourceDeleteInstance(method: MapMethod): string {
         let result = '';
 
         // controle de campos das temp-tables de saida
@@ -522,7 +743,7 @@ export class HealthcareTastExtension {
         return result;
     }
 
-    private buildCenarioSetFilePath(method: MapMethod, dataInput: any, dataOutput: any, mapFile: MapFile, testCaseId: string): string {
+    private buildCenarioSetFilePath(): string {
         let result = '';
         let config = getConfig();
 
@@ -538,7 +759,7 @@ export class HealthcareTastExtension {
         return result;
     }
 
-    private buildCenarioSetAssertSpool(method: MapMethod, dataInput: any, dataOutput: any, mapFile: MapFile, testCaseId: string): string {
+    private buildCenarioSetAssertSpool(testCaseId: string): string {
         let result = '';
         let config = getConfig();
         let programName = this.assemblyTestCaseFileName(testCaseId);

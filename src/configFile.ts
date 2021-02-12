@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import * as jsonminify from 'jsonminify';
 import { readFile } from 'fs';
 import * as promisify from 'util.promisify';
-import { isNullOrUndefined } from 'util';
 
 let configFile: TotvsHealthcareConfig = null;
 let watcher: vscode.FileSystemWatcher = null;
@@ -36,6 +35,7 @@ export interface TastCenarioConfig {
     output: string;
     dataFiles?: TastCenarioDataFileConfig;
     spool?: string;
+    autosuggest?: boolean;
 }
 
 export interface HostConfig {

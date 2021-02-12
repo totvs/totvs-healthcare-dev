@@ -2,7 +2,7 @@
     "name": "totvs-healthcare-dev",
     "displayName": "TOTVS Healthcare Dev",
     "description": "TOTVS Healthcare Development Utilities for VS Code",
-    "version": "1.3.4",
+    "version": "1.4.0",
     "publisher": "totvs-healthcare",
     "author": "TOTVS Healthcare",
     "license": "Apache-2.0",
@@ -41,6 +41,11 @@
                 "description": "Gerar cenário de teste a partir dos dados interceptados"
             },
             {
+                "command": "healthcare.tast.cenario.unit",
+                "title": "Healthcare: TAST - Gerar cenário de teste unitário",
+                "description": "Gerar cenário de teste unitário para um método específico"
+            },
+            {
                 "command": "healthcare.tast.run",
                 "title": "Healthcare: TAST - Rodar casos de teste",
                 "description": "Roda todos os casos de teste que passam por este arquivo (experimental)"
@@ -67,6 +72,10 @@
                 },
                 {
                     "command": "healthcare.tast.cenario.compile",
+                    "when": "editorLangId == 'abl'"
+                },
+                {
+                    "command": "healthcare.tast.cenario.unit",
                     "when": "editorLangId == 'abl'"
                 },
                 {

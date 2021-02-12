@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { FormattingOptions, DocumentFormattingEditProvider, TextDocument, CancellationToken, TextEdit, Range, Position } from 'vscode';
-import { isNullOrUndefined } from 'util';
 
 enum CommentType { SingleLine, MultiLine }
 enum StringQuoteType { SingleQuote, DoubleQuote }
@@ -128,8 +127,9 @@ class HealthcareFormat {
 
         let res = regexCommand.exec(text);
         while(res) {
-            if (!isNullOrUndefined(beforeExecution))
+            if (beforeExecution) {
                 beforeExecution(res);
+            }
             let ident: string;
             if (blockTabs > 0) {
                 ident = this.blockTabs(blockTabs);
@@ -149,8 +149,9 @@ class HealthcareFormat {
             }
             // substitui dados com identacao
             let str = res[1] + res[2] + res[3] + res[4].replace(/\n/gm, `\n${ident}`) + res[5];
-            if (!isNullOrUndefined(afterExecution))
+            if (afterExecution) {
                 str = afterExecution(str);
+            }
             text = text.substring(0, res.index) + str + text.substring(regexCommand.lastIndex);
             res = regexCommand.exec(text);
         }
