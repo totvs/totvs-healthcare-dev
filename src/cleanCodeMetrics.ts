@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { SourceCode, MapFile } from './models';
-import { isNullOrUndefined } from 'util';
 import { CodeMetricsConfig, getConfig } from './configFile';
 import { HealthcareOpenEdgeUtils } from './openEdgeUtils';
 
@@ -60,11 +59,9 @@ export class HealthcareCleanCodeMetricsExtension {
                 LLOC: DEFAULT_METRICS.METHOD_LLOC
             }
         };
-        if (!isNullOrUndefined(config) && !isNullOrUndefined(config.metrics)) {
-            if (!isNullOrUndefined(config.metrics.methods)) {
-                result.methods.max = (config.metrics.methods.max || result.methods.max);
-                result.methods.LLOC = (config.metrics.methods.LLOC || result.methods.LLOC);
-            }
+        if (config?.metrics?.methods) {
+            result.methods.max = (config.metrics.methods.max || result.methods.max);
+            result.methods.LLOC = (config.metrics.methods.LLOC || result.methods.LLOC);
         }
         return result;
     }
@@ -84,7 +81,7 @@ export class HealthcareCleanCodeMetricsExtension {
             vscode.commands.executeCommand(this.EXT_GETMAP).then((mapFile: MapFile) => {
                 vscode.commands.getCommands(true).then(list => {
                     // tratamento especial para codigos progress
-                    if (!isNullOrUndefined(list.filter(item => item == this.EXT_GETSOURCE))) {
+                    if (list.filter(item => item == this.EXT_GETSOURCE)) {
                         vscode.commands.executeCommand(this.EXT_GETSOURCE).then((sourceCode: SourceCode) => {
                             let result = this.calculateMetrics(mapFile, document, (sourceCode.sourceWithoutComments || ''));
                             vscode.workspace.openTextDocument({content: JSON.stringify(result), language: 'json'}).then(doc => vscode.window.showTextDocument(doc));
@@ -100,8 +97,9 @@ export class HealthcareCleanCodeMetricsExtension {
     }
 
     private calculateMetrics(mapFile: MapFile, document: vscode.TextDocument, text?: string): CodeMetric {
-        if (isNullOrUndefined(text))
+        if (!text) {
             text = document.getText();
+        }
 
         let result: CodeMetric = {
             methods: { items: [] },

@@ -1,5 +1,10 @@
 import * as vscode from "vscode";
 
+export interface ITastFileMap {
+    fsPath: string;
+    mapFile?: MapFile;
+}
+
 /**
  * Classes de mapeamento do fonte (espelhamento do plugin openedge-zext)
  */

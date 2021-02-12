@@ -3,8 +3,7 @@ import * as http from 'http';
 import * as fs from 'fs';
 import * as path from 'path';
 import { outputChannel } from './notification';
-import { isNullOrUndefined } from 'util';
-import { TastRunnerConfig, getConfig, TastConfig } from './configFile';
+import { TastRunnerConfig, getConfig } from './configFile';
 import { HealthcareOpenEdgeUtils } from './openEdgeUtils';
 import { changePath, mkdir } from './utils';
 
@@ -54,18 +53,8 @@ export class HealthcareTastRunnerExtension {
     }
 
     private getRunnerConfig(): TastRunnerConfig {
-        let _cfg = getConfig();
-        let _tast: TastConfig;
-        let _run: TastRunnerConfig;
-        if (!isNullOrUndefined(_cfg.tast))
-            _tast = _cfg.tast;
-        else
-            _tast = {};
-        if (!isNullOrUndefined(_tast.run))
-            _run = _tast.run;
-        else
-            _run = {};
-        return _run;
+        let cfg = getConfig();
+        return (cfg?.tast?.run || { });
     }
 
     private executeRunner() {
@@ -77,7 +66,7 @@ export class HealthcareTastRunnerExtension {
         }
 
         this.runnerConfig = this.getRunnerConfig();
-        if (isNullOrUndefined(this.runnerConfig.elasticsearch) || isNullOrUndefined(this.runnerConfig.totvs)) {
+        if (!(this.runnerConfig?.elasticsearch) || !(this.runnerConfig?.totvs)) {
             vscode.window.showErrorMessage('É necessário configurar o ambiente para rodar os testes');
             return;
         }
@@ -122,7 +111,7 @@ export class HealthcareTastRunnerExtension {
             }
 
             this.searchTestCases(relativeName).then(cases => {
-                if (isNullOrUndefined(cases)) {
+                if (!cases) {
                     // gerou erro na consulta
                     vscode.window.showInformationMessage('Erro ao consultar casos de teste')
                     outputChannel.appendLine('Erro ao consultar casos de teste');
@@ -146,7 +135,7 @@ export class HealthcareTastRunnerExtension {
 
     private compileProgram(programName: string, wf: vscode.WorkspaceFolder, onSuccess: Function, onError: Function) {
         let config = getConfig();
-        if ((!isNullOrUndefined(config.tast.deploymentPath))&&(config.tast.run.compile !== false)) {
+        if ((config.tast.deploymentPath)&&(config.tast.run.compile !== false)) {
             let workspaceDir = wf.uri.fsPath + '\\';
             let relativeName = programName.replace(workspaceDir, '').replace(/\\/g, '/');
 
@@ -201,13 +190,14 @@ export class HealthcareTastRunnerExtension {
         let promises = [];
 
         let pTotvs = this.requestTotvsLogin().then(totvsCookies => {
-            if (!isNullOrUndefined(totvsCookies))
+            if (totvsCookies) {
                 this.sessionCookies = [...this.sessionCookies, ...totvsCookies];
+            }
         });
         promises.push(pTotvs);
 
         let pJosso = pTotvs.then(() => this.requestJossoLogin().then(jossoCookies => {
-            if (!isNullOrUndefined(jossoCookies)) {
+            if (jossoCookies) {
                 this.sessionCookies = [...this.sessionCookies, ...jossoCookies];
                 result = true;
             }
@@ -228,7 +218,7 @@ export class HealthcareTastRunnerExtension {
         return new Promise(resolve => {
             const getRequest = http.request(getOptions, (res) => {
                 let timeoutControl = setTimeout(() => {
-                    if (!isNullOrUndefined(res.socket)) {
+                    if (res.socket) {
                         outputChannel.appendLine(`Timeout ao tentar login no TOTVS`);
                         res.socket.destroy();
                     }
@@ -239,20 +229,23 @@ export class HealthcareTastRunnerExtension {
 
                 res.on('data', () => {
                     clearTimeout(timeoutControl);
-                    if (!isNullOrUndefined(res.headers['set-cookie']))
+                    if (res.headers['set-cookie']) {
                         resultData = res.headers['set-cookie'];
+                    }
                 })
-                    .on('error', () => {
-                        clearTimeout(timeoutControl);
-                        resolve();
-                    })
-                    .on('end', () => {
-                        clearTimeout(timeoutControl);
-                        if (isNullOrUndefined(resultData))
-                            resolve();
-                        else
-                            resolve(resultData)
-                    });
+                .on('error', () => {
+                    clearTimeout(timeoutControl);
+                    resolve(null);
+                })
+                .on('end', () => {
+                    clearTimeout(timeoutControl);
+                    if (!resultData) {
+                        resolve(null);
+                    }
+                    else {
+                        resolve(resultData);
+                    }
+                });
             });
 
             getRequest.end();
@@ -273,7 +266,7 @@ export class HealthcareTastRunnerExtension {
         return new Promise(resolve => {
             const getRequest = http.request(getOptions, (res) => {
                 let timeoutControl = setTimeout(() => {
-                    if (!isNullOrUndefined(res.socket)) {
+                    if (res.socket) {
                         outputChannel.appendLine(`Timeout ao tentar login no JOSSO`);
                         res.socket.destroy();
                     }
@@ -284,20 +277,23 @@ export class HealthcareTastRunnerExtension {
 
                 res.on('data', () => {
                     clearTimeout(timeoutControl);
-                    if (!isNullOrUndefined(res.headers['set-cookie']))
+                    if (res.headers['set-cookie']) {
                         resultData = res.headers['set-cookie'];
+                    }
                 })
-                    .on('error', () => {
-                        clearTimeout(timeoutControl);
-                        resolve();
-                    })
-                    .on('end', () => {
-                        clearTimeout(timeoutControl);
-                        if (isNullOrUndefined(resultData))
-                            resolve();
-                        else
-                            resolve(resultData)
-                    });
+                .on('error', () => {
+                    clearTimeout(timeoutControl);
+                    resolve(null);
+                })
+                .on('end', () => {
+                    clearTimeout(timeoutControl);
+                    if (!resultData) {
+                        resolve(null);
+                    }
+                    else {
+                        resolve(resultData);
+                    }
+                });
             });
 
             getRequest.end();
@@ -366,7 +362,7 @@ export class HealthcareTastRunnerExtension {
 
             const postRequest = http.request(postOptions, (res) => {
                 let timeoutControl = setTimeout(() => {
-                    if (!isNullOrUndefined(res.socket)) {
+                    if (res.socket) {
                         outputChannel.appendLine(`Timeout ao buscar casos de teste associados`);
                         res.socket.destroy();
                     }
@@ -383,7 +379,7 @@ export class HealthcareTastRunnerExtension {
                 })
                 .on('error', () => {
                     clearTimeout(timeoutControl);
-                    resolve();
+                    resolve(null);
                 })
                 .on('end', () => {
                     clearTimeout(timeoutControl);
@@ -395,7 +391,7 @@ export class HealthcareTastRunnerExtension {
                     }
                     catch (e) {
                         outputChannel.appendLine(`Erro no retorno da consulta!\nRetorno:\n${resultData}`);
-                        resolve()
+                        resolve(null)
                     }
                 });
             });
@@ -452,19 +448,21 @@ export class HealthcareTastRunnerExtension {
 
         let result = results.find(item => !item.done);
 
-        if (!isNullOrUndefined(result)) {
-            if (isNullOrUndefined(result.data)) {
+        if (result) {
+            if (!result.data) {
                 // ainda nao tem os dados do caso de teste
                 this.getTestCase(result.CASENAME)
                     .then(getTestCaseResult => {
                         let tcData;
-                        if (!isNullOrUndefined(getTestCaseResult) && !isNullOrUndefined(getTestCaseResult.items)) {
+                        if ((getTestCaseResult) && (getTestCaseResult.items)) {
                             tcData = getTestCaseResult.items.find(item => item.caseName.toLowerCase() == (result.CASENAME.toLowerCase() + '.r'));
                         }
-                        if (!isNullOrUndefined(tcData))
+                        if (tcData) {
                             result.data = tcData;
-                        else
+                        }
+                        else {
                             result.done = true;
+                        }
                         this.runNext(results, onFinish);
                     })
                     .catch(() => {
@@ -476,7 +474,7 @@ export class HealthcareTastRunnerExtension {
                 // ja tem os dados, entao roda o caso de teste
                 this.runTestCase(result)
                     .then(runTestCaseResult => {
-                        if (!isNullOrUndefined(runTestCaseResult) && !isNullOrUndefined(runTestCaseResult.items) && (runTestCaseResult.items.length == 1)) {
+                        if ((runTestCaseResult) && (runTestCaseResult.items) && (runTestCaseResult.items.length == 1)) {
                             let tcResult = runTestCaseResult.items[0];
                             result.result = tcResult;
                             result.passed = (tcResult.status == 'passed');
@@ -495,8 +493,9 @@ export class HealthcareTastRunnerExtension {
         }
         else {
             // nenhum teste pendente
-            if (!isNullOrUndefined(onFinish))
+            if (onFinish) {
                 onFinish(results);
+            }
         }
     }
 
@@ -516,7 +515,7 @@ export class HealthcareTastRunnerExtension {
             outputChannel.appendLine(`Consultando dados de ${caseName}...`);
             const getRequest = http.request(getOptions, (res) => {
                 let timeoutControl = setTimeout(() => {
-                    if (!isNullOrUndefined(res.socket)) {
+                    if (res.socket) {
                         res.socket.destroy();
                     }
                     res.emit('error');
@@ -534,15 +533,15 @@ export class HealthcareTastRunnerExtension {
                         outputChannel.appendLine(`Erro ao consultar dados de ${caseName} (status ${res.statusCode})`);
                     }
                 })
-                    .on('error', () => {
-                        clearTimeout(timeoutControl);
-                        outputChannel.appendLine(`Erro ao consultar dados de ${caseName}`);
-                        resolve();
-                    })
-                    .on('end', () => {
-                        clearTimeout(timeoutControl);
-                        resolve(resultData);
-                    });
+                .on('error', () => {
+                    clearTimeout(timeoutControl);
+                    outputChannel.appendLine(`Erro ao consultar dados de ${caseName}`);
+                    resolve(null);
+                })
+                .on('end', () => {
+                    clearTimeout(timeoutControl);
+                    resolve(resultData);
+                });
             });
 
             getRequest.end();
@@ -571,7 +570,7 @@ export class HealthcareTastRunnerExtension {
             outputChannel.appendLine(`Executando ${testCase.CASENAME}...`);
             const postRequest = http.request(postOptions, (res) => {
                 let timeoutControl = setTimeout(() => {
-                    if (!isNullOrUndefined(res.socket)) {
+                    if (res.socket) {
                         res.socket.destroy();
                     }
                     res.emit('error');
@@ -592,7 +591,7 @@ export class HealthcareTastRunnerExtension {
                     .on('error', () => {
                         clearTimeout(timeoutControl);
                         outputChannel.appendLine(`> Erro ao executar teste ${testCase.CASENAME}`);
-                        resolve();
+                        resolve(null);
                     })
                     .on('end', () => {
                         clearTimeout(timeoutControl);

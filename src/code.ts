@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { getConfig, CodeFileAlertConfig } from './configFile';
-import { isNullOrUndefined } from 'util';
 import { SourceCode } from './models';
 
 export class HealthcareCodeExtension {
@@ -16,7 +15,6 @@ export class HealthcareCodeExtension {
     }
 
     private registerCommands() {
-        //vscode.workspace.onDidOpenTextDocument(document => { this.checkCodeAlerts(document) });
         vscode.workspace.onDidSaveTextDocument(document => { this.checkCodeAlerts(document) });
         vscode.workspace.onDidCloseTextDocument(document => { this.emptyCodeAlerts(document) });
     }
@@ -39,7 +37,7 @@ export class HealthcareCodeExtension {
             vscode.commands.getCommands(true)
                 .then(list => {
                     // tratamento especial para codigos progress
-                    if ((document.languageId == 'abl')&&(!isNullOrUndefined(list.filter(item => item == this.EXT_GETSOURCE)))) {
+                    if ((document.languageId == 'abl')&&(list.filter(item => item == this.EXT_GETSOURCE))) {
                         vscode.commands.executeCommand(this.EXT_GETSOURCE)
                             .then((data: SourceCode) => { 
                                 let diagMap = [
@@ -79,16 +77,12 @@ export class HealthcareCodeExtension {
 
     private getKeywords(): string[] {
         let cfg = getConfig();
-        if ((!isNullOrUndefined(cfg))&&(!isNullOrUndefined(cfg.code))&&(!isNullOrUndefined(cfg.code.alerts))&&(!isNullOrUndefined(cfg.code.alerts.keywords)))
-            return cfg.code.alerts.keywords.map(item => item.toLowerCase());
-        return [];
+        return cfg?.code?.alerts?.keywords?.map(item => item.toLowerCase()) || [];
     }
 
     private shouldNotify(): boolean {
         let cfg = getConfig();
-        if ((!isNullOrUndefined(cfg))&&(!isNullOrUndefined(cfg.code))&&(!isNullOrUndefined(cfg.code.alerts))&&(!isNullOrUndefined(cfg.code.alerts.notify)))
-            return cfg.code.alerts.notify;
-        return false;
+        return cfg?.code?.alerts?.notify || false;
     }
 
     private searchFileCodeAlerts(document: vscode.TextDocument, source: string, alerts: CodeFileAlertConfig[]) {
@@ -114,10 +108,7 @@ export class HealthcareCodeExtension {
 
     private getFileAlerts(fileName: string): CodeFileAlertConfig[] {
         let cfg = getConfig();
-        if ((!isNullOrUndefined(cfg))&&(!isNullOrUndefined(cfg.code))&&(!isNullOrUndefined(cfg.code.fileAlerts))) {
-            return cfg.code.fileAlerts.filter(item => new RegExp((item.fileName || ''), 'i').test(fileName));
-        }
-        return [];
+        return cfg?.code?.fileAlerts?.filter(item => new RegExp((item.fileName || ''), 'i').test(fileName)) || [];
     }
 
 }

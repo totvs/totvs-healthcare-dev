@@ -61,6 +61,11 @@
               "id": "/properties/tast/cenario/spool",
               "description": "Diretório de spool da verificação dos casos de teste, onde serão gerados arquivos de erros na comparação",
               "type": "string"
+            },
+            "autosuggest": {
+              "id": "/properties/tast/cenario/autosuggest",
+              "description": "Monitora alterações no código-fonte e sugere a criação de casos de teste",
+              "type": "boolean"
             }
           }
         },

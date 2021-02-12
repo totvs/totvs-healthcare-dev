@@ -1,5 +1,10 @@
 # Change Log
 
+## 1.4.0
+- Ajustes no template de cenários de TAST (tratamento de condição STOP)
+- Geração de cenários de TAST para métodos individuais
+- Monitoramento de alterações no fonte, com sugestão de teste para métodos novos
+
 ## 1.3.4
 - Ajustes na geração do brige e cenários de TAST (procedures privadas, parametros extent)
 

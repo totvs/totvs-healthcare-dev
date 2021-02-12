@@ -7,7 +7,7 @@ Para as funcionalidades que tratam de fontes Progress, é necessário instalar u
 - [rafaelcanal.gps-abl](https://marketplace.visualstudio.com/items?itemName=rafaelcanal.gps-abl)
 
 ## TAST - Testes Automatizados
-- Geração de casos de teste (TAST) baseados em operações no sistema
+- Geração de casos de teste (TAST)
 - Executar casos de teste associados ao código-fonte ativo
 
 ### Bridge
@@ -15,6 +15,7 @@ Para as funcionalidades que tratam de fontes Progress, é necessário instalar u
 
 ### Test Case
 - Gera o script de teste unitário baseado nos dados interceptados
+- Gera o script de teste unitário para um método específico
 
 ## Alertas
 - Emissão de alertas de palavras específicas no código (para evitar o commit de linhas de teste)
