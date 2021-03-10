@@ -5,6 +5,7 @@ import { loadExtensionConfig } from './configFile';
 import { HealthcareCodeExtension } from './code';
 import { HealthcareFormattingExtension } from './formatting';
 import { HealthcareCleanCodeMetricsExtension } from './cleanCodeMetrics';
+import { HealthcareTastPanelExtension } from './tastPanel';
 
 export function activate(context: vscode.ExtensionContext): void {
 
@@ -20,6 +21,8 @@ export function activate(context: vscode.ExtensionContext): void {
 		new HealthcareCleanCodeMetricsExtension(context);
 		// Extensão de Formatação de Código
 		new HealthcareFormattingExtension(context);
+		// Extensão do Painel do TAST
+		new HealthcareTastPanelExtension(context);
 	});
 }
 

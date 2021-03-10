@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.5.0
+- Painel de controle do TAST (cadstrar e rodar casos de teste)
+- Snippets: if, fore, forf, forl
+
 ## 1.4.0
 - Ajustes no template de cenários de TAST (tratamento de condição STOP)
 - Geração de cenários de TAST para métodos individuais
