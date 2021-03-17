@@ -2,7 +2,7 @@
     "name": "totvs-healthcare-dev",
     "displayName": "TOTVS Healthcare Dev",
     "description": "TOTVS Healthcare Development Utilities for VS Code",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "publisher": "totvs-healthcare",
     "author": "TOTVS Healthcare",
     "license": "Apache-2.0",
@@ -15,7 +15,8 @@
         "url": "https://github.com/totvs/totvs-healthcare-dev.git"
     },
     "activationEvents": [
-        "onLanguage:abl"
+        "onLanguage:abl",
+        "workspaceContains:**/*.p"
     ],
     "main": "./out/extension",
     "contributes": {
@@ -54,6 +55,60 @@
                 "command": "healthcare.cleanCode.metrics.show",
                 "title": "Healthcare: CodeReview - Metricas de complexidade",
                 "description": "Analisa o código e mostra o resultado das métricas de complexidade (experimental)"
+            },
+            {
+                "command": "healthcare.tast.panel.update",
+                "title": "Atualizar painel",
+                "icon": {
+                    "dark": "resources/tastPanel/refresh-dark.svg",
+                    "light": "resources/tastPanel/refresh-light.svg"
+                }
+            },
+            {
+                "command": "healthcare.tast.panel.runFromPath",
+                "title": "Rodar caso de teste sem cadastro"
+            },
+            {
+                "command": "healthcare.tast.panel.add",
+                "title": "Adicionar caso de teste",
+                "icon": {
+                    "dark": "resources/tastPanel/add-dark.svg",
+                    "light": "resources/tastPanel/add-light.svg"
+                }
+            },
+            {
+                "command": "healthcare.tast.panel.run",
+                "title": "Executar caso de teste",
+                "icon": {
+                    "dark": "resources/tastPanel/run-dark.svg",
+                    "light": "resources/tastPanel/run-light.svg"
+                }
+            }
+        ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "tast-panel-container",
+                    "title": "TAST",
+                    "icon": "resources/tastPanel/container.svg"
+                }
+            ]
+        },
+        "views": {
+            "tast-panel-container": [
+                {
+                    "id": "tastPanel",
+                    "name": "Painel",
+                    "visibility": "visible",
+                    "contextualTitle": "Painel Central",
+                    "when": "hasTastConfig"
+                }
+            ]
+        },
+        "viewsWelcome": [
+            {
+                "view": "tastPanel",
+                "contents": "Carregados dados..."
             }
         ],
         "menus": {
@@ -85,6 +140,45 @@
                 {
                     "command": "healthcare.cleanCode.metrics.show",
                     "when": "editorLangId == 'abl'"
+                },
+                {
+                    "command": "healthcare.tast.panel.update",
+                    "when": "false"
+                },
+                {
+                    "command": "healthcare.tast.panel.add",
+                    "when": "false"
+                },
+                {
+                    "command": "healthcare.tast.panel.run",
+                    "when": "false"
+                },
+                {
+                    "command": "healthcare.tast.panel.runFromPath",
+                    "when": "false"
+                }
+            ],
+            "view/title": [
+                {
+                    "command": "healthcare.tast.panel.update",
+                    "group": "navigation",
+                    "when": "view == tastPanel"
+                },
+                {
+                    "command": "healthcare.tast.panel.runFromPath",
+                    "when": "view == tastPanel"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "healthcare.tast.panel.add",
+                    "group": "inline",
+                    "when": "view == tastPanel && viewItem == suite"
+                },
+                {
+                    "command": "healthcare.tast.panel.run",
+                    "group": "inline",
+                    "when": "view == tastPanel && viewItem == case"
                 }
             ]
         },

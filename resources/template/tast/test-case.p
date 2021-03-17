@@ -6,7 +6,7 @@
  ******************************************************************************/
 using classes.test.*.
 
-{hdp/hdrunpersis.iv "new"}
+{hdp/hdrunpersis.iv}
 // includes com definicoes de temp-tables utilizadas no caso de teste
 [@includes]
 // temp-tables utilizadas para comparacao de dados de saida
@@ -37,7 +37,6 @@ procedure piExecute:
 
     finally:
         delete object oAssert.
-        {hdp/hddelpersis.i}
     end finally.
 
 end procedure.
