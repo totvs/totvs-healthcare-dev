@@ -1,7 +1,7 @@
 # Change Log
 
 ## 1.5.0
-- Painel de controle do TAST (cadstrar e rodar casos de teste)
+- Painel de controle do TAST (cadastrar e rodar casos de teste)
 - Snippets: if, fore, forf, forl
 
 ## 1.4.0

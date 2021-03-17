@@ -6,7 +6,7 @@
  ******************************************************************************/
 using classes.test.*.
 
-{hdp/hdrunpersis.iv "new"}
+{hdp/hdrunpersis.iv}
 [@includes]
 def var oAssert as GpsAssert no-undo.
 
@@ -31,7 +31,6 @@ procedure piExecute:
 
     finally:
         delete object oAssert.
-        {hdp/hddelpersis.i}
     end finally.
 
 end procedure.
