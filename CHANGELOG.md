@@ -1,5 +1,8 @@
 # Change Log
 
+## 1.5.1
+- Alteração templates de TAST (removido "new" da include de persistência)
+
 ## 1.5.0
 - Painel de controle do TAST (cadastrar e rodar casos de teste)
 - Snippets: if, fore, forf, forl
